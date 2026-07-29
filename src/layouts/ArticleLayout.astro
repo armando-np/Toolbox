@@ -1,0 +1,53 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { formatDate } from '../utils/format';
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  category: string;
+  readingTime: string;
+}
+const { title, description, pubDate, updatedDate, category, readingTime } = Astro.props;
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  dateModified: (updatedDate || pubDate).toISOString(),
+  inLanguage: 'es-MX',
+  author: { '@type': 'Organization', name: 'ToolboxMX' },
+  publisher: { '@type': 'Organization', name: 'ToolboxMX' },
+  mainEntityOfPage: Astro.url.href
+};
+---
+<BaseLayout
+  title={title}
+  description={description}
+  type="article"
+  publishedTime={pubDate}
+  modifiedTime={updatedDate || pubDate}
+  jsonLd={articleSchema}
+>
+  <article class="article">
+    <header class="article-header container-narrow">
+      <Breadcrumbs items={[{ label: 'Blog', href: '/blog/' }, { label: title }]} />
+      <p class="eyebrow">{category}</p>
+      <h1>{title}</h1>
+      <p class="article-deck">{description}</p>
+      <div class="article-meta">
+        <span>{formatDate(pubDate)}</span>
+        <span aria-hidden="true">·</span>
+        <span>{readingTime} de lectura</span>
+        {updatedDate && <><span aria-hidden="true">·</span><span>Actualizado {formatDate(updatedDate)}</span></>}
+      </div>
+    </header>
+    <div class="article-body container-narrow prose-content">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>

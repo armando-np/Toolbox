@@ -1,0 +1,83 @@
+---
+interface Props {
+  gaId?: string;
+  clarityId?: string;
+}
+
+const gaId = Astro.props.gaId || '';
+const clarityId = Astro.props.clarityId || '';
+const enabled = Boolean(gaId || clarityId);
+---
+{enabled && (
+  <aside id="privacy-consent" class="privacy-consent" hidden aria-labelledby="privacy-consent-title" aria-live="polite">
+    <div>
+      <strong id="privacy-consent-title">Preferencias de medición</strong>
+      <p>
+        La analítica opcional ayuda a entender qué herramientas son útiles. Puedes aceptarla o continuar sin medición.
+        Consulta la <a href="/privacidad/">política de privacidad</a>.
+      </p>
+    </div>
+    <div class="privacy-consent-actions">
+      <button class="button button-secondary" type="button" data-consent="rejected">Rechazar</button>
+      <button class="button" type="button" data-consent="accepted">Aceptar analítica</button>
+    </div>
+  </aside>
+)}
+
+<script is:inline define:vars={{ gaId, clarityId, enabled }}>
+  (() => {
+    if (!enabled) return;
+
+    const storageKey = 'toolbox-analytics-consent';
+    const panel = document.querySelector('#privacy-consent');
+    let analyticsLoaded = false;
+
+    const loadAnalytics = () => {
+      if (analyticsLoaded) return;
+      analyticsLoaded = true;
+
+      if (gaId) {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function(){ window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', gaId, { anonymize_ip: true });
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
+        document.head.appendChild(script);
+      }
+
+      if (clarityId) {
+        window.clarity = window.clarity || function(){
+          (window.clarity.q = window.clarity.q || []).push(arguments);
+        };
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.clarity.ms/tag/${encodeURIComponent(clarityId)}`;
+        document.head.appendChild(script);
+      }
+    };
+
+    const setChoice = (choice) => {
+      localStorage.setItem(storageKey, choice);
+      if (panel instanceof HTMLElement) panel.hidden = true;
+      if (choice === 'accepted') loadAnalytics();
+    };
+
+    const showPanel = () => {
+      if (panel instanceof HTMLElement) panel.hidden = false;
+    };
+
+    const choice = localStorage.getItem(storageKey);
+    if (choice === 'accepted') loadAnalytics();
+    else if (choice !== 'rejected') showPanel();
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target.closest('[data-consent]') : null;
+      if (target instanceof HTMLButtonElement && target.dataset.consent) setChoice(target.dataset.consent);
+
+      const settings = event.target instanceof Element ? event.target.closest('[data-privacy-settings]') : null;
+      if (settings) showPanel();
+    });
+  })();
+</script>

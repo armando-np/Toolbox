@@ -1,46 +1,74 @@
 ---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import SearchOverlay from './SearchOverlay.astro';
+import { NAV_LINKS } from '../config/site';
 const pathname = Astro.url.pathname;
-const links = [
-  { href: '/', label: 'Inicio' },
-  { href: '/calculadoras/', label: 'Calculadoras' },
-  { href: '/generadores/', label: 'Generadores' },
-  { href: '/convertidores/', label: 'Convertidores' },
-  { href: '/blog/', label: 'Blog' },
-  { href: '/acerca/', label: 'Acerca' },
-  { href: '/contacto/', label: 'Contacto' }
-];
-
-const isActive = (href: string) =>
-  href === '/' ? pathname === '/' : pathname.startsWith(href);
+const isActive = (href: string) => pathname.startsWith(href);
 ---
-<header class="site-header">
+<header class="site-header" data-header>
   <div class="container nav-wrap">
-    <a class="brand" href="/" aria-label="ToolboxMX, inicio">
-      <span class="brand-mark">T</span>
-      <span>ToolboxMX</span>
+    <a class="brand" href="/" aria-label="ToolboxMX, página de inicio">
+      <Logo />
     </a>
 
-    <button class="menu-button" type="button" aria-expanded="false" aria-controls="main-nav">
-      Menu
-    </button>
-
-    <nav id="main-nav" class="main-nav" aria-label="Navegacion principal">
-      {links.map((link) => (
-        <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
-          {link.label}
-        </a>
+    <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
+      {NAV_LINKS.map((link) => (
+        <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>{link.label}</a>
       ))}
     </nav>
+
+    <div class="nav-actions">
+      <button class="search-trigger" type="button" data-open-search aria-label="Buscar herramientas">
+        <Icon name="search" size={18} />
+        <span>Buscar</span>
+        <kbd>⌘ K</kbd>
+      </button>
+      <button class="icon-button theme-toggle" type="button" aria-label="Cambiar tema">
+        <span class="theme-icon theme-icon-sun"><Icon name="sun" size={19} /></span>
+        <span class="theme-icon theme-icon-moon"><Icon name="moon" size={19} /></span>
+      </button>
+      <button class="icon-button menu-button" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menú">
+        <span class="menu-open"><Icon name="menu" /></span>
+        <span class="menu-close"><Icon name="close" /></span>
+      </button>
+    </div>
   </div>
 </header>
-
+<SearchOverlay />
 <script>
-  const button = document.querySelector<HTMLButtonElement>('.menu-button');
+  const menuButton = document.querySelector<HTMLButtonElement>('.menu-button');
   const nav = document.querySelector<HTMLElement>('.main-nav');
+  const themeButton = document.querySelector<HTMLButtonElement>('.theme-toggle');
 
-  button?.addEventListener('click', () => {
-    const open = button.getAttribute('aria-expanded') === 'true';
-    button.setAttribute('aria-expanded', String(!open));
-    nav?.classList.toggle('is-open', !open);
+  const updateThemeLabel = () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    themeButton?.setAttribute('aria-label', dark ? 'Activar tema claro' : 'Activar tema oscuro');
+  };
+  updateThemeLabel();
+
+  menuButton?.addEventListener('click', () => {
+    const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+    menuButton.setAttribute('aria-expanded', String(!isOpen));
+    nav?.classList.toggle('is-open', !isOpen);
+  });
+
+  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    menuButton?.setAttribute('aria-expanded', 'false');
+    nav?.classList.remove('is-open');
+  }));
+
+  themeButton?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('toolbox-theme', next);
+    updateThemeLabel();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      menuButton?.setAttribute('aria-expanded', 'false');
+      nav?.classList.remove('is-open');
+    }
   });
 </script>

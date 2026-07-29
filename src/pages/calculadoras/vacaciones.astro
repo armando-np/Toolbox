@@ -1,79 +1,37 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+const faqs = [
+  { question: '¿La herramienta determina cuántos días me corresponden?', answer: 'No. Debes introducir los días aplicables según tu antigüedad, contrato y normativa vigente.' },
+  { question: '¿El total es neto?', answer: 'No necesariamente. El resultado es una suma bruta y no calcula impuestos, retenciones u otros conceptos de nómina.' },
+  { question: '¿Puedo cambiar la prima vacacional?', answer: 'Sí. El porcentaje es editable para adaptar la estimación a tu caso.' }
+];
 ---
-<BaseLayout
-  title="Calculadora de vacaciones"
-  description="Estima dias de vacaciones, pago y prima vacacional con parametros configurables."
->
-  <ToolShell
-    title="Calculadora de vacaciones"
-    description="Calcula una estimacion del pago correspondiente a tus dias de vacaciones."
-    note="La legislacion y las politicas laborales pueden cambiar. Verifica los dias y porcentajes aplicables en tu contrato y con una fuente oficial."
-  >
-    <form id="vacation-form" data-tool="vacaciones">
-      <div class="form-grid">
-        <div class="field">
-          <label for="daily-salary">Salario diario (MXN)</label>
-          <input id="daily-salary" name="dailySalary" type="number" min="0" step="0.01" required />
+<BaseLayout title="Calculadora de vacaciones" description="Estima pago de vacaciones y prima vacacional con salario diario, días y porcentaje configurables." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de vacaciones', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="vacaciones" title="Calculadora de vacaciones" description="Calcula una estimación del pago de vacaciones y la prima con parámetros configurables." note="Verifica días, porcentaje y tratamiento fiscal con tu contrato, nómina y fuentes oficiales vigentes." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="vacation-form" data-tool="vacaciones" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="daily-salary">Salario diario</label><div class="input-prefix"><span>$</span><input id="daily-salary" name="dailySalary" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="500" required /></div></div>
+          <div class="field"><label for="days">Días de vacaciones</label><input id="days" name="days" type="number" inputmode="numeric" min="1" max="365" step="1" value="12" required /></div>
+          <div class="field"><label for="premium">Prima vacacional (%)</label><input id="premium" name="premium" type="number" inputmode="decimal" min="0" max="500" step="0.01" value="25" required /></div>
+          <div class="field"><label for="other">Otros pagos</label><div class="input-prefix"><span>$</span><input id="other" name="other" type="number" inputmode="decimal" min="0" step="0.01" value="0" /></div></div>
         </div>
-        <div class="field">
-          <label for="days">Dias de vacaciones</label>
-          <input id="days" name="days" type="number" min="1" max="365" step="1" value="12" required />
-        </div>
-        <div class="field">
-          <label for="premium">Prima vacacional (%)</label>
-          <input id="premium" name="premium" type="number" min="0" max="500" step="0.01" value="25" required />
-        </div>
-        <div class="field">
-          <label for="other">Otros pagos (MXN)</label>
-          <input id="other" name="other" type="number" min="0" step="0.01" value="0" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="button" type="submit">Calcular</button>
-        <button class="button button-secondary" type="reset">Limpiar</button>
-      </div>
-    </form>
-
-    <section id="vacation-result" class="result" hidden aria-live="polite">
-      <h2>Total estimado</h2>
-      <p id="vacation-total" class="result-value"></p>
-      <div class="result-details">
-        <span id="vacation-pay"></span>
-        <span id="vacation-premium"></span>
-      </div>
-    </section>
+        <div class="actions"><button class="button" type="submit">Calcular pago</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+      <section id="vacation-result" class="result" hidden aria-live="polite"><span class="result-kicker">Total bruto estimado</span><p id="vacation-total" class="result-value"></p><div class="result-details"><span id="vacation-pay"></span><span id="vacation-premium"></span><span id="vacation-other"></span></div></section>
+    </div>
+    <div slot="content">
+      <h2>Cómo se obtiene la estimación</h2><p>El pago base se calcula multiplicando el salario diario por los días de vacaciones. La prima se obtiene aplicando el porcentaje al pago base. Los otros pagos se agregan al final.</p>
+      <div class="callout"><strong>Total = salario diario × días + prima vacacional + otros pagos</strong></div>
+      <h2>Antes de usar el resultado</h2><ul><li>Confirma el salario diario que utiliza tu nómina.</li><li>Introduce los días que realmente te correspondan.</li><li>Revisa el porcentaje contractual o legal vigente.</li><li>No interpretes el total como pago neto después de impuestos.</li></ul>
+      <FAQ items={faqs} />
+    </div>
   </ToolShell>
 </BaseLayout>
-
 <script>
-  const form = document.querySelector<HTMLFormElement>('#vacation-form');
-  const result = document.querySelector<HTMLElement>('#vacation-result');
-  const totalOutput = document.querySelector<HTMLElement>('#vacation-total');
-  const payOutput = document.querySelector<HTMLElement>('#vacation-pay');
-  const premiumOutput = document.querySelector<HTMLElement>('#vacation-premium');
-  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget as HTMLFormElement);
-    const dailySalary = Number(data.get('dailySalary'));
-    const days = Number(data.get('days'));
-    const premiumRate = Number(data.get('premium')) / 100;
-    const other = Number(data.get('other'));
-
-    const vacationPay = dailySalary * days;
-    const premium = vacationPay * premiumRate;
-    const total = vacationPay + premium + other;
-
-    if (totalOutput) totalOutput.textContent = mxn.format(total);
-    if (payOutput) payOutput.textContent = `Pago por vacaciones: ${mxn.format(vacationPay)}`;
-    if (premiumOutput) premiumOutput.textContent = `Prima vacacional: ${mxn.format(premium)}`;
-    if (result) result.hidden = false;
-  });
-
-  form?.addEventListener('reset', () => {
-    if (result) result.hidden = true;
-  });
+  const form = document.querySelector<HTMLFormElement>('#vacation-form'); const result = document.querySelector<HTMLElement>('#vacation-result'); const totalOutput = document.querySelector<HTMLElement>('#vacation-total'); const payOutput = document.querySelector<HTMLElement>('#vacation-pay'); const premiumOutput = document.querySelector<HTMLElement>('#vacation-premium'); const otherOutput = document.querySelector<HTMLElement>('#vacation-other'); const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  form?.addEventListener('submit', (event) => { event.preventDefault(); if (!form.reportValidity()) return; const data = new FormData(form); const dailySalary = Number(data.get('dailySalary')); const days = Number(data.get('days')); const premiumRate = Number(data.get('premium')) / 100; const other = Number(data.get('other')); const vacationPay = dailySalary * days; const premium = vacationPay * premiumRate; const total = vacationPay + premium + other; if (totalOutput) totalOutput.textContent = mxn.format(total); if (payOutput) payOutput.textContent = `Pago base: ${mxn.format(vacationPay)}`; if (premiumOutput) premiumOutput.textContent = `Prima: ${mxn.format(premium)}`; if (otherOutput) otherOutput.textContent = `Otros pagos: ${mxn.format(other)}`; if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } window.toolboxTrack?.('calculation_completed', { tool_name: 'vacaciones', vacation_days: days }); });
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; });
 </script>

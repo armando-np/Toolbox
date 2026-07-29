@@ -1,6 +1,8 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import AnalyticsConsent from '../components/AnalyticsConsent.astro';
+import { SITE } from '../config/site';
 import '../styles/global.css';
 
 interface Props {
@@ -8,103 +10,137 @@ interface Props {
   description: string;
   image?: string;
   noindex?: boolean;
+  type?: 'website' | 'article';
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
   title,
   description,
-  image = '/og-default.svg',
-  noindex = false
+  image = '/og-default.png',
+  noindex = false,
+  type = 'website',
+  publishedTime,
+  modifiedTime,
+  jsonLd
 } = Astro.props;
 
-const siteName = 'ToolboxMX';
-const fullTitle = title === siteName ? title : `${title} | ${siteName}`;
+const fullTitle = title === SITE.name ? title : `${title} | ${SITE.name}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL(image, Astro.site);
 const gaId = import.meta.env.PUBLIC_GA_ID;
 const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  url: Astro.site,
+  description: SITE.description,
+  inLanguage: SITE.locale,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${Astro.site}buscar/?q={search_term_string}`,
+    'query-input': 'required name=search_term_string'
+  }
+};
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE.name,
+  url: Astro.site,
+  logo: new URL('/favicon.svg', Astro.site)
+};
+
+const schemas = [websiteSchema, organizationSchema, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
 ---
 <!doctype html>
-<html lang="es-MX">
+<html lang="es-MX" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+    <meta name="color-scheme" content="light dark" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="es-MX" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#5b4df7" />
+    <meta name="format-detection" content="telephone=no" />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:locale" content="es_MX" />
-    <meta property="og:site_name" content={siteName} />
+    <meta property="og:site_name" content={SITE.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
 
-    <script type="application/ld+json" set:html={JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: siteName,
-      url: Astro.site,
-      inLanguage: 'es-MX',
-      description: 'Calculadoras, generadores y convertidores gratuitos.'
-    })} />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem('toolbox-theme');
+        const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = saved || preferred;
+      })();
+    </script>
 
-    {gaId && (
-      <>
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
-        <script is:inline define:vars={{ gaId }}>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', gaId);
-        </script>
-      </>
-    )}
+    {schemas.map((schema) => <script type="application/ld+json" set:html={JSON.stringify(schema)}></script>)}
 
-    {clarityId && (
-      <script is:inline define:vars={{ clarityId }}>
-        (function(c,l,a,r,i,t,y){
-          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-          t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, 'clarity', 'script', clarityId);
-      </script>
-    )}
 
     <script is:inline>
       window.toolboxTrack = function(eventName, parameters) {
-        var details = parameters || {};
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', eventName, details);
-        }
-        if (typeof window.clarity === 'function') {
-          window.clarity('event', eventName);
-        }
+        const details = parameters || {};
+        if (typeof window.gtag === 'function') window.gtag('event', eventName, details);
+        if (typeof window.clarity === 'function') window.clarity('event', eventName);
       };
 
       document.addEventListener('submit', function(event) {
-        var form = event.target;
+        const form = event.target;
         if (form instanceof HTMLFormElement && form.dataset.tool) {
           window.toolboxTrack('tool_submit', { tool_name: form.dataset.tool });
         }
       });
 
-      document.addEventListener('click', function(event) {
-        var target = event.target instanceof Element
-          ? event.target.closest('[data-track]')
-          : null;
-        if (target) {
-          window.toolboxTrack(target.getAttribute('data-track') || 'tracked_click');
+      document.addEventListener('click', async function(event) {
+        const target = event.target instanceof Element ? event.target.closest('[data-track]') : null;
+        if (target) window.toolboxTrack(target.getAttribute('data-track') || 'tracked_click');
+
+        const copyButton = event.target instanceof Element ? event.target.closest('[data-copy-target]') : null;
+        if (copyButton instanceof HTMLButtonElement) {
+          const selector = copyButton.dataset.copyTarget;
+          const source = selector ? document.querySelector(selector) : null;
+          const text = source instanceof HTMLInputElement || source instanceof HTMLTextAreaElement
+            ? source.value
+            : source?.textContent || '';
+          if (!text.trim()) return;
+          try {
+            await navigator.clipboard.writeText(text.trim());
+            const label = copyButton.querySelector('span');
+            const original = label?.textContent || 'Copiar';
+            if (label) label.textContent = 'Copiado';
+            copyButton.classList.add('is-success');
+            window.toolboxTrack('copy_completed');
+            window.setTimeout(() => {
+              if (label) label.textContent = original;
+              copyButton.classList.remove('is-success');
+            }, 1400);
+          } catch {}
         }
       });
     </script>
@@ -116,5 +152,6 @@ const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
       <slot />
     </main>
     <Footer />
+    <AnalyticsConsent gaId={gaId} clarityId={clarityId} />
   </body>
 </html>

@@ -1,86 +1,56 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import Icon from '../../components/Icon.astro';
+const faqs = [
+  { question: '¿Qué puedo poner en un código QR?', answer: 'Texto, enlaces, datos de contacto u otra información que un lector QR pueda interpretar.' },
+  { question: '¿Qué nivel de corrección conviene?', answer: 'Un nivel mayor tolera más daño u obstrucción, pero produce un patrón más denso. Media suele ser suficiente para usos generales.' },
+  { question: '¿El QR caduca?', answer: 'El archivo generado no caduca. Si contiene un enlace, su utilidad depende de que esa dirección siga activa.' }
+];
 ---
-<BaseLayout
-  title="Generador de codigo QR"
-  description="Genera un codigo QR para textos o enlaces y descargalo en formato PNG."
->
-  <ToolShell
-    title="Generador de codigo QR"
-    description="Escribe un enlace o texto. El codigo se genera en tu navegador."
-  >
-    <form id="qr-form" data-tool="qr">
-      <div class="form-grid">
-        <div class="field field-full">
-          <label for="qr-text">Texto o URL</label>
-          <textarea id="qr-text" name="text" required placeholder="https://toolboxmx.pages.dev"></textarea>
+<BaseLayout title="Generador de código QR" description="Crea un código QR para texto o enlaces y descárgalo como PNG. La generación se realiza en tu navegador." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Generador de código QR', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="qr" title="Generador de código QR" description="Convierte un texto o enlace en un código QR listo para descargar como imagen PNG." categoryHref="/generadores/" categoryLabel="Generadores">
+    <div slot="tool">
+      <form id="qr-form" data-tool="qr" novalidate>
+        <div class="form-grid">
+          <div class="field field-full"><label for="qr-text">Texto o URL</label><textarea id="qr-text" name="text" required placeholder="https://ejemplo.com"></textarea></div>
+          <div class="field"><label for="qr-size">Tamaño de imagen</label><select id="qr-size" name="size"><option value="256">256 × 256 px</option><option value="512" selected>512 × 512 px</option><option value="768">768 × 768 px</option><option value="1024">1024 × 1024 px</option></select></div>
+          <div class="field"><label for="qr-level">Corrección de error</label><select id="qr-level" name="level"><option value="L">Baja</option><option value="M" selected>Media</option><option value="Q">Alta</option><option value="H">Máxima</option></select></div>
         </div>
-        <div class="field">
-          <label for="qr-size">Tamano</label>
-          <select id="qr-size" name="size">
-            <option value="256">256 x 256</option>
-            <option value="512" selected>512 x 512</option>
-            <option value="768">768 x 768</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="qr-level">Correccion de error</label>
-          <select id="qr-level" name="level">
-            <option value="L">Baja</option>
-            <option value="M" selected>Media</option>
-            <option value="Q">Alta</option>
-            <option value="H">Maxima</option>
-          </select>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="button" type="submit">Generar QR</button>
-        <button id="download-qr" data-track="qr_download" class="button button-secondary" type="button" disabled>Descargar PNG</button>
-      </div>
-    </form>
-    <div class="qr-output">
-      <canvas id="qr-canvas" width="512" height="512" aria-label="Codigo QR generado"></canvas>
+        <div class="actions"><button class="button" type="submit">Generar QR</button><button id="download-qr" data-track="qr_download" class="button button-secondary" type="button" disabled><Icon name="download" size={18} /> Descargar PNG</button></div>
+      </form>
+      <div class="qr-output"><canvas id="qr-canvas" width="512" height="512" role="img" aria-label="Código QR generado"></canvas><p id="qr-status" class="form-status" aria-live="polite">Introduce contenido y selecciona Generar QR.</p></div>
+    </div>
+    <div slot="content">
+      <h2>Cómo obtener un QR legible</h2><ul><li>Usa una URL corta cuando sea posible.</li><li>Mantén buen contraste entre el patrón y el fondo.</li><li>No recortes el margen blanco alrededor del código.</li><li>Prueba el archivo con varios teléfonos antes de imprimirlo.</li></ul>
+      <h2>Privacidad</h2><p>La imagen se genera localmente. ToolboxMX no recibe el texto introducido. Recuerda que cualquier persona que escanee el QR podrá ver o abrir su contenido.</p>
+      <FAQ items={faqs} />
     </div>
   </ToolShell>
 </BaseLayout>
-
 <script>
   import QRCode from 'qrcode';
-
   const form = document.querySelector<HTMLFormElement>('#qr-form');
   const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas');
   const downloadButton = document.querySelector<HTMLButtonElement>('#download-qr');
-
+  const status = document.querySelector<HTMLElement>('#qr-status');
+  form?.addEventListener('input', () => { if (downloadButton) downloadButton.disabled = true; });
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!canvas) return;
-
-    const data = new FormData(event.currentTarget as HTMLFormElement);
-    const text = String(data.get('text') ?? '').trim();
+    if (!form.reportValidity() || !canvas) return;
+    const data = new FormData(form);
+    const text = String(data.get('text') || '').trim();
     const width = Number(data.get('size'));
     const errorCorrectionLevel = String(data.get('level')) as 'L' | 'M' | 'Q' | 'H';
-
-    if (!text) return;
-
-    await QRCode.toCanvas(canvas, text, {
-      width,
-      margin: 2,
-      errorCorrectionLevel,
-      color: {
-        dark: '#0f172a',
-        light: '#ffffff'
-      }
-    });
-
-    if (downloadButton) downloadButton.disabled = false;
+    try {
+      await QRCode.toCanvas(canvas, text, { width, margin: 3, errorCorrectionLevel, color: { dark: '#111827', light: '#ffffff' } });
+      if (downloadButton) downloadButton.disabled = false;
+      if (status) status.textContent = 'Código QR generado. Pruébalo antes de compartirlo o imprimirlo.';
+      window.toolboxTrack?.('generation_completed', { tool_name: 'qr', size: width, correction_level: errorCorrectionLevel });
+    } catch {
+      if (status) status.textContent = 'No fue posible generar el código. Reduce la longitud del contenido e inténtalo otra vez.';
+    }
   });
-
-  downloadButton?.addEventListener('click', () => {
-    if (!canvas) return;
-    const link = document.createElement('a');
-    link.download = 'toolboxmx-qr.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
+  downloadButton?.addEventListener('click', () => { if (!canvas) return; const link = document.createElement('a'); link.download = 'toolboxmx-codigo-qr.png'; link.href = canvas.toDataURL('image/png'); link.click(); window.toolboxTrack?.('download_completed', { tool_name: 'qr', file_type: 'png' }); });
 </script>

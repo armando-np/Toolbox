@@ -1,0 +1,16 @@
+{
+  "name": "ToolboxMX",
+  "short_name": "ToolboxMX",
+  "description": "Calculadoras, generadores y convertidores gratuitos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#5b4df7",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

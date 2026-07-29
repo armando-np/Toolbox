@@ -1,26 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
 ---
-<BaseLayout
-  title="Acerca"
-  description="Conoce el objetivo y la tecnologia detras de ToolboxMX."
->
-  <article class="prose container">
-    <p class="eyebrow">El proyecto</p>
-    <h1>Acerca de ToolboxMX</h1>
-    <p>
-      ToolboxMX es un proyecto de aprendizaje para practicar desarrollo web, SEO tecnico, analitica,
-      experimentacion y optimizacion de conversiones.
-    </p>
-    <h2>Tecnologia</h2>
-    <p>
-      El sitio usa Astro para generar paginas estaticas y Cloudflare Pages para desplegarlas desde GitHub.
-      Las herramientas se ejecutan en el navegador para mantener la arquitectura simple y economica.
-    </p>
-    <h2>Privacidad</h2>
-    <p>
-      Las herramientas iniciales procesan los datos localmente. No debes introducir informacion sensible
-      en calculadoras que aun esten marcadas como demo.
-    </p>
-  </article>
+<BaseLayout title="Acerca de ToolboxMX" description="Conoce el propósito, los principios y la tecnología detrás de ToolboxMX.">
+  <PageHeader eyebrow="El proyecto" title="Herramientas claras para tareas reales" description="ToolboxMX es un catálogo independiente de utilidades gratuitas creado para combinar rapidez, privacidad, accesibilidad y explicaciones útiles." breadcrumbs={[{ label: 'Acerca' }]} />
+  <section class="section">
+    <div class="container split-grid">
+      <div>
+        <p class="eyebrow">Propósito</p>
+        <h2>Resolver sin complicar</h2>
+        <p class="lead">Muchas tareas simples terminan en páginas saturadas, formularios confusos o resultados sin contexto. Este proyecto busca una alternativa más limpia.</p>
+      </div>
+      <div class="prose-content">
+        <h2>Principios</h2>
+        <div class="info-grid">
+          <article class="info-card"><strong>Utilidad primero</strong><p>Cada página debe completar una tarea concreta y explicar el resultado.</p></article>
+          <article class="info-card"><strong>Privacidad comprensible</strong><p>Los datos se procesan localmente cuando la herramienta no necesita un servidor.</p></article>
+          <article class="info-card"><strong>Accesibilidad</strong><p>Navegación por teclado, contraste, etiquetas y diseño adaptable forman parte de la base.</p></article>
+          <article class="info-card"><strong>Mantenimiento responsable</strong><p>Las herramientas fiscales, médicas o legales incluyen límites claros y requieren revisión.</p></article>
+        </div>
+        <h2>Tecnología</h2>
+        <p>El sitio está construido con Astro y se publica como archivos estáticos en Cloudflare. Esta arquitectura reduce JavaScript innecesario, facilita el posicionamiento y mantiene bajos los costos operativos.</p>
+        <div class="callout"><strong>Proyecto abierto:</strong> el código fuente puede consultarse en GitHub para revisar la implementación y proponer mejoras.</div>
+        <a class="button button-secondary" href="https://github.com/armando-np/Toolbox" target="_blank" rel="noreferrer"><Icon name="github" size={19} /> Ver repositorio</a>
+      </div>
+    </div>
+  </section>
 </BaseLayout>

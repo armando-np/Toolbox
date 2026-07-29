@@ -1,24 +1,27 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHeader from '../../components/PageHeader.astro';
+import Icon from '../../components/Icon.astro';
+import { formatDate } from '../../utils/format';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
-<BaseLayout
-  title="Blog"
-  description="Articulos sobre herramientas web, SEO, medicion y desarrollo con Astro."
->
-  <PageHeader
-    eyebrow="Contenido"
-    title="Blog"
-    description="Notas practicas sobre desarrollo, SEO, analitica y mejora de herramientas digitales."
-  />
-  <section class="container section">
-    <div class="tool-grid">
-      <a class="tool-card" href="/blog/como-validar-una-herramienta-web/">
-        <div class="card-meta"><span>Analitica</span><span>5 min</span></div>
-        <h2>Como validar una herramienta web antes de crear veinte mas</h2>
-        <p>Define eventos, observa el recorrido y decide que optimizar con datos.</p>
-        <span class="card-link">Leer articulo →</span>
-      </a>
+<BaseLayout title="Blog" description="Guías prácticas sobre calculadoras, seguridad, finanzas personales y uso de herramientas digitales.">
+  <PageHeader eyebrow="Contenido" title="Guías prácticas" description="Explicaciones claras para entender los cálculos, usar mejor las herramientas y tomar decisiones con más contexto." breadcrumbs={[{ label: 'Blog' }]} />
+  <section class="section">
+    <div class="container">
+      <div class="blog-grid">
+        {posts.map((post) => (
+          <a class="post-card" href={`/blog/${post.id}/`}>
+            <div class="post-card-top"><span>{post.data.category}</span><span>{formatDate(post.data.pubDate)}</span></div>
+            <h2>{post.data.title}</h2>
+            <p>{post.data.description}</p>
+            <span class="section-link">Leer artículo <Icon name="arrow-right" size={18} /></span>
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 </BaseLayout>

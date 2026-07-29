@@ -1,17 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
 ---
-<BaseLayout
-  title="Pagina no encontrada"
-  description="La pagina solicitada no existe."
-  noindex={true}
->
-  <section class="page-header container">
-    <p class="eyebrow">Error 404</p>
-    <h1>Esta pagina no existe.</h1>
-    <p class="lead">Revisa la direccion o vuelve al directorio principal.</p>
-    <div class="hero-actions">
-      <a class="button" href="/">Volver al inicio</a>
+<BaseLayout title="Página no encontrada" description="La página solicitada no existe." noindex={true}>
+  <section class="empty-state">
+    <span class="empty-state-code">ERROR 404</span>
+    <h1>Esta página no está en la caja.</h1>
+    <p>La dirección puede haber cambiado o la herramienta todavía no existe.</p>
+    <div class="actions">
+      <a class="button" href="/"><Icon name="arrow-right" size={18} /> Volver al inicio</a>
+      <button class="button button-secondary" type="button" data-open-search><Icon name="search" size={18} /> Buscar herramienta</button>
     </div>
   </section>
 </BaseLayout>

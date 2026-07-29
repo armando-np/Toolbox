@@ -1,59 +1,180 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolCard from '../components/ToolCard.astro';
-import { tools } from '../data/tools';
+import CategoryCard from '../components/CategoryCard.astro';
+import Icon from '../components/Icon.astro';
+import { tools, getToolsByCategory } from '../data/tools';
+import { formatDate } from '../utils/format';
+
+const featuredTools = tools.filter((tool) => tool.featured);
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Herramientas disponibles en ToolboxMX',
+  itemListElement: tools.map((tool, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: tool.title,
+    url: new URL(tool.href, Astro.site).href
+  }))
+};
 ---
 <BaseLayout
   title="ToolboxMX"
-  description="Calculadoras, generadores y convertidores gratuitos para resolver tareas cotidianas desde tu navegador."
+  description="Calculadoras, generadores y convertidores gratuitos, rápidos y fáciles de usar. Resuelve tareas cotidianas sin registro desde tu navegador."
+  jsonLd={itemListSchema}
 >
-  <section class="hero">
+  <section class="home-hero">
     <div class="container hero-grid">
-      <div>
-        <p class="eyebrow">Herramientas web gratuitas</p>
-        <h1>Resuelve tareas rapidas sin instalar aplicaciones.</h1>
+      <div class="hero-copy">
+        <p class="eyebrow">Herramientas útiles, sin complicaciones</p>
+        <h1>Resuelve tareas en segundos con <span>ToolboxMX.</span></h1>
         <p class="lead">
-          Calculadoras, generadores y convertidores simples, rapidos y optimizados para funcionar
-          directamente en tu navegador.
+          Calculadoras, generadores y convertidores gratuitos diseñados para ser claros,
+          rápidos y privados. Sin cuentas, instalaciones ni pasos innecesarios.
         </p>
         <div class="hero-actions">
-          <a class="button" href="#herramientas">Explorar herramientas</a>
-          <a class="button button-secondary" href="/acerca/">Conocer el proyecto</a>
+          <button class="button" type="button" data-open-search>
+            <Icon name="search" size={19} /> Buscar una herramienta
+          </button>
+          <a class="button button-secondary" href="#herramientas">
+            Explorar catálogo <Icon name="arrow-right" size={18} />
+          </a>
+        </div>
+        <div class="hero-trust" aria-label="Beneficios">
+          <span><Icon name="check" size={17} /> Sin registro</span>
+          <span><Icon name="shield" size={17} /> Procesamiento local</span>
+          <span><Icon name="bolt" size={17} /> Carga rápida</span>
         </div>
       </div>
 
-      <aside class="hero-panel" aria-label="Resumen del sitio">
-        <div class="hero-stat">
-          <strong>8</strong>
-          <span>herramientas iniciales</span>
+      <div class="hero-showcase" aria-hidden="true">
+        <div class="showcase-glow"></div>
+        <div class="showcase-panel">
+          <div class="showcase-toolbar">
+            <span class="showcase-dots"><i></i><i></i><i></i></span>
+            <span class="showcase-chip">8 herramientas</span>
+          </div>
+          <div class="showcase-search"><Icon name="search" size={18} /> Busca IMC, QR, hipoteca…</div>
+          <div class="showcase-cards">
+            {tools.filter((tool) => tool.popular).slice(0, 4).map((tool) => (
+              <div class="showcase-item">
+                <span><Icon name={tool.icon} size={20} /></span>
+                <div><strong>{tool.shortTitle}</strong><small>{tool.category}</small></div>
+                <Icon name="arrow-right" size={17} />
+              </div>
+            ))}
+          </div>
         </div>
-        <div class="hero-stat">
-          <strong>0</strong>
-          <span>registros requeridos</span>
-        </div>
-        <div class="hero-stat">
-          <strong>100%</strong>
-          <span>compatible con moviles</span>
-        </div>
-      </aside>
+        <div class="floating-badge"><Icon name="shield" size={20} /> Datos en tu navegador</div>
+      </div>
     </div>
   </section>
 
-  <section id="herramientas" class="section">
+  <section class="section section-soft" aria-labelledby="categorias-title">
     <div class="container">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Directorio</p>
-          <h2>Herramientas disponibles</h2>
+          <p class="eyebrow">Explora por categoría</p>
+          <h2 id="categorias-title">Encuentra lo que necesitas</h2>
         </div>
-        <p>
-          Esta primera version permite validar SEO, navegacion, eventos, embudos y comportamiento
-          de usuarios antes de ampliar el catalogo.
-        </p>
+        <p>Una estructura simple para llegar rápido a la herramienta adecuada.</p>
       </div>
+      <div class="category-grid">
+        <CategoryCard
+          title="Calculadoras"
+          description="Finanzas, trabajo, salud y cálculos cotidianos con resultados explicados."
+          href="/calculadoras/"
+          icon="calculator"
+          count={getToolsByCategory('Calculadoras').length}
+        />
+        <CategoryCard
+          title="Generadores"
+          description="Crea códigos QR, contraseñas seguras e identificadores para tus proyectos."
+          href="/generadores/"
+          icon="sparkles"
+          count={getToolsByCategory('Generadores').length}
+        />
+        <CategoryCard
+          title="Convertidores"
+          description="Convierte unidades de longitud, masa y temperatura sin fórmulas manuales."
+          href="/convertidores/"
+          icon="convert"
+          count={getToolsByCategory('Convertidores').length}
+        />
+      </div>
+    </div>
+  </section>
 
+  <section id="herramientas" class="section" aria-labelledby="herramientas-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Catálogo</p>
+          <h2 id="herramientas-title">Herramientas destacadas</h2>
+        </div>
+        <button class="section-link button-ghost" type="button" data-open-search>
+          Ver todas en el buscador <Icon name="arrow-right" size={18} />
+        </button>
+      </div>
       <div class="tool-grid">
-        {tools.map((tool) => <ToolCard {...tool} />)}
+        {featuredTools.map((tool) => <ToolCard {...tool} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-soft" aria-labelledby="principios-title">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Principios del producto</p>
+          <h2 id="principios-title">Diseñado para ser útil</h2>
+        </div>
+        <p>Menos distracciones, mejor accesibilidad y explicaciones claras en cada resultado.</p>
+      </div>
+      <div class="value-grid">
+        <article class="value-card"><span><Icon name="bolt" /></span><h3>Rendimiento primero</h3><p>Astro entrega páginas ligeras y carga JavaScript solo donde existe interacción.</p></article>
+        <article class="value-card"><span><Icon name="shield" /></span><h3>Privacidad clara</h3><p>Las herramientas procesan información localmente siempre que su función lo permite.</p></article>
+        <article class="value-card"><span><Icon name="device" /></span><h3>Para cualquier pantalla</h3><p>Formularios, resultados y navegación adaptados a móvil, tableta y escritorio.</p></article>
+        <article class="value-card"><span><Icon name="info" /></span><h3>Resultados explicados</h3><p>Cada herramienta incluye contexto, fórmula, límites y preguntas frecuentes.</p></article>
+      </div>
+    </div>
+  </section>
+
+  {posts.length > 0 && (
+    <section class="section" aria-labelledby="blog-title">
+      <div class="container">
+        <div class="section-heading">
+          <div><p class="eyebrow">Guías prácticas</p><h2 id="blog-title">Aprende además de calcular</h2></div>
+          <a class="section-link" href="/blog/">Ver todos los artículos <Icon name="arrow-right" size={18} /></a>
+        </div>
+        <div class="blog-grid">
+          {posts.map((post) => (
+            <a class="post-card" href={`/blog/${post.id}/`}>
+              <div class="post-card-top"><span>{post.data.category}</span><span>{formatDate(post.data.pubDate)}</span></div>
+              <h2>{post.data.title}</h2>
+              <p>{post.data.description}</p>
+              <span class="section-link">Leer guía <Icon name="arrow-right" size={18} /></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container">
+      <div class="cta-panel">
+        <div>
+          <h2>¿Falta una herramienta?</h2>
+          <p>Comparte tu idea o reporta un error. Las siguientes mejoras se priorizan por utilidad y demanda real.</p>
+        </div>
+        <a class="button" href="/contacto/">Enviar sugerencia <Icon name="arrow-right" size={18} /></a>
       </div>
     </div>
   </section>

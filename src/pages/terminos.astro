@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+---
+<BaseLayout title="Términos de uso" description="Condiciones y limitaciones aplicables al uso de las herramientas de ToolboxMX.">
+  <PageHeader eyebrow="Legal" title="Términos de uso" description="Condiciones generales y límites de responsabilidad para utilizar ToolboxMX." breadcrumbs={[{ label: 'Términos' }]} />
+  <article class="container-narrow section prose-content">
+    <p><strong>Última actualización:</strong> 29 de julio de 2026.</p>
+    <h2>Uso informativo</h2>
+    <p>Las herramientas ofrecen cálculos y resultados informativos. No constituyen asesoría médica, fiscal, legal, laboral o financiera profesional.</p>
+    <h2>Exactitud</h2>
+    <p>Se busca mantener fórmulas e interfaces correctas, pero no se garantiza que los resultados sean completos, vigentes o adecuados para todas las circunstancias. Verifica decisiones importantes con fuentes oficiales y profesionales calificados.</p>
+    <h2>Herramientas experimentales</h2>
+    <p>Las páginas marcadas como Demo o Beta pueden utilizar supuestos simplificados. No deben emplearse para declaraciones, contratos, diagnósticos ni operaciones sensibles.</p>
+    <h2>Disponibilidad</h2>
+    <p>El sitio puede cambiar, suspender herramientas o corregir resultados sin aviso previo.</p>
+    <h2>Uso responsable</h2>
+    <p>No utilices las herramientas para actividades ilegales, abuso, fraude, intrusión o tratamiento indebido de datos personales.</p>
+    <h2>Código y terceros</h2>
+    <p>El proyecto puede integrar bibliotecas y servicios externos sujetos a sus propias licencias y condiciones.</p>
+  </article>
+</BaseLayout>

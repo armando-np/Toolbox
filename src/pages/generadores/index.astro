@@ -2,21 +2,14 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import ToolCard from '../../components/ToolCard.astro';
-import { tools } from '../../data/tools';
-const generators = tools.filter((tool) => tool.category === 'Generadores');
+import { getToolsByCategory } from '../../data/tools';
+const categoryTools = getToolsByCategory('Generadores');
 ---
-<BaseLayout
-  title="Generadores"
-  description="Generadores gratuitos de codigos QR, contrasenas y UUID."
->
-  <PageHeader
-    eyebrow="Categoria"
-    title="Generadores"
-    description="Crea recursos utiles desde tu navegador sin registrar una cuenta."
-  />
-  <section class="container section">
-    <div class="tool-grid">
-      {generators.map((tool) => <ToolCard {...tool} />)}
+<BaseLayout title="Generadores gratuitos" description="Genera códigos QR, contraseñas y UUID desde tu navegador sin registro.">
+  <PageHeader eyebrow="Categoría" title="Generadores" description="Crea recursos digitales de forma rápida. Los generadores funcionan directamente en tu navegador y permiten copiar o descargar resultados." breadcrumbs={[{ label: 'Generadores' }]} />
+  <section class="section">
+    <div class="container">
+      <div class="tool-grid">{categoryTools.map((tool) => <ToolCard {...tool} />)}</div>
     </div>
   </section>
 </BaseLayout>

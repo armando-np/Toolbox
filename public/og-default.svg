@@ -1,7 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#0f172a"/>
-  <circle cx="1020" cy="110" r="260" fill="#0ea5e9" opacity=".22"/>
-  <circle cx="160" cy="590" r="290" fill="#22c55e" opacity=".15"/>
-  <text x="90" y="275" fill="#f8fafc" font-family="Arial, sans-serif" font-size="88" font-weight="700">ToolboxMX</text>
-  <text x="94" y="355" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="38">Calculadoras, generadores y convertidores gratuitos</text>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="1120" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#f5f3ff"/><stop offset=".55" stop-color="#eef2ff"/><stop offset="1" stop-color="#e0f2fe"/></linearGradient>
+    <linearGradient id="mark" x1="100" y1="130" x2="300" y2="330" gradientUnits="userSpaceOnUse"><stop stop-color="#7c6cff"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+    <filter id="shadow" x="0" y="0" width="1200" height="630"><feDropShadow dx="0" dy="28" stdDeviation="32" flood-color="#312e81" flood-opacity=".14"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1080" cy="80" r="250" fill="#7c6cff" opacity=".07"/>
+  <circle cx="120" cy="620" r="290" fill="#0ea5e9" opacity=".08"/>
+  <g filter="url(#shadow)"><rect x="72" y="72" width="1056" height="486" rx="44" fill="#fff" stroke="#dfe3ec"/></g>
+  <rect x="126" y="132" width="160" height="160" rx="48" fill="url(#mark)"/>
+  <path d="M165 170h84v22h-29v67h-26v-67h-29v-22Z" fill="#fff"/>
+  <text x="338" y="215" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="800" letter-spacing="-4" fill="#121527">Toolbox<tspan fill="#5b4df7">MX</tspan></text>
+  <text x="126" y="370" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700" letter-spacing="-2" fill="#121527">Herramientas útiles, sin complicaciones.</text>
+  <text x="126" y="430" font-family="Arial, Helvetica, sans-serif" font-size="27" fill="#677087">Calculadoras, generadores y convertidores gratuitos.</text>
+  <g transform="translate(126 476)"><rect width="174" height="44" rx="22" fill="#eceaff"/><text x="22" y="29" font-family="Arial" font-size="18" font-weight="700" fill="#5b4df7">Sin registro</text><rect x="190" width="215" height="44" rx="22" fill="#e7f8f1"/><text x="212" y="29" font-family="Arial" font-size="18" font-weight="700" fill="#087456">Procesamiento local</text><rect x="421" width="160" height="44" rx="22" fill="#e0f2fe"/><text x="443" y="29" font-family="Arial" font-size="18" font-weight="700" fill="#0369a1">Carga rápida</text></g>
 </svg>

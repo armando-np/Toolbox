@@ -1,134 +1,54 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import Icon from '../../components/Icon.astro';
+const faqs = [
+  { question: '¿Cuántos decimales conserva?', answer: 'El resultado muestra hasta ocho decimales y elimina ceros finales innecesarios.' },
+  { question: '¿Puedo convertir temperaturas bajo cero?', answer: 'Sí. El campo acepta valores negativos para Celsius y Fahrenheit. Kelvin no puede ser menor que cero absoluto, aunque esta versión no bloquea todos los valores físicamente inválidos.' },
+  { question: '¿Las conversiones requieren internet?', answer: 'No después de cargar la página. Las fórmulas se ejecutan en el navegador.' }
+];
 ---
-<BaseLayout
-  title="Convertidores"
-  description="Convierte unidades de longitud, peso y temperatura."
->
-  <ToolShell
-    title="Convertidores"
-    description="Selecciona una categoria, una unidad de origen y una unidad de destino."
-  >
-    <form id="converter-form" data-tool="convertidor">
-      <div class="form-grid">
-        <div class="field">
-          <label for="conversion-type">Tipo de conversion</label>
-          <select id="conversion-type" name="type">
-            <option value="length">Longitud</option>
-            <option value="weight">Peso</option>
-            <option value="temperature">Temperatura</option>
-          </select>
+<BaseLayout title="Convertidor de unidades" description="Convierte unidades de longitud, masa y temperatura de forma rápida y gratuita." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Convertidor de unidades', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="convertidores" title="Convertidor de unidades" description="Selecciona una magnitud, introduce un valor y convierte entre unidades comunes." categoryHref="/convertidores/" categoryLabel="Convertidores">
+    <div slot="tool">
+      <form id="converter-form" data-tool="convertidor" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="conversion-type">Magnitud</label><select id="conversion-type" name="type"><option value="length">Longitud</option><option value="weight">Masa</option><option value="temperature">Temperatura</option></select></div>
+          <div class="field"><label for="conversion-value">Valor</label><input id="conversion-value" name="value" type="number" inputmode="decimal" step="any" placeholder="1" required /></div>
+          <div class="field"><label for="from-unit">Unidad de origen</label><select id="from-unit" name="from"></select></div>
+          <div class="field"><label for="to-unit">Unidad de destino</label><select id="to-unit" name="to"></select></div>
         </div>
-        <div class="field">
-          <label for="conversion-value">Valor</label>
-          <input id="conversion-value" name="value" type="number" step="any" required />
-        </div>
-        <div class="field">
-          <label for="from-unit">De</label>
-          <select id="from-unit" name="from"></select>
-        </div>
-        <div class="field">
-          <label for="to-unit">A</label>
-          <select id="to-unit" name="to"></select>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="button" type="submit">Convertir</button>
-        <button id="swap-units" class="button button-secondary" type="button">Intercambiar</button>
-      </div>
-    </form>
-
-    <section id="converter-result" class="result" hidden aria-live="polite">
-      <h2>Resultado</h2>
-      <p id="converter-value" class="result-value"></p>
-    </section>
+        <div class="actions"><button class="button" type="submit">Convertir</button><button id="swap-units" class="button button-secondary" type="button"><Icon name="rotate" size={18} /> Intercambiar</button></div>
+      </form>
+      <section id="converter-result" class="result" hidden aria-live="polite"><span class="result-kicker">Resultado</span><p id="converter-value" class="result-value"></p><div class="result-details"><span id="converter-equation"></span></div></section>
+    </div>
+    <div slot="content">
+      <h2>Unidades disponibles</h2><div class="info-grid"><article class="info-card"><strong>Longitud</strong><p>Milímetros, centímetros, metros, kilómetros, pulgadas, pies, yardas y millas.</p></article><article class="info-card"><strong>Masa</strong><p>Gramos, kilogramos, onzas y libras.</p></article><article class="info-card"><strong>Temperatura</strong><p>Celsius, Fahrenheit y Kelvin.</p></article><article class="info-card"><strong>Precisión</strong><p>Factores definidos con suficiente detalle para conversiones cotidianas.</p></article></div>
+      <FAQ items={faqs} />
+    </div>
   </ToolShell>
 </BaseLayout>
-
 <script>
-  type Unit = { value: string; label: string };
+  type Unit = { value: string; label: string; symbol: string };
   const unitSets: Record<string, Unit[]> = {
     length: [
-      { value: 'm', label: 'Metros' },
-      { value: 'km', label: 'Kilometros' },
-      { value: 'cm', label: 'Centimetros' },
-      { value: 'mi', label: 'Millas' },
-      { value: 'ft', label: 'Pies' },
-      { value: 'in', label: 'Pulgadas' }
+      { value: 'mm', label: 'Milímetros', symbol: 'mm' }, { value: 'cm', label: 'Centímetros', symbol: 'cm' }, { value: 'm', label: 'Metros', symbol: 'm' }, { value: 'km', label: 'Kilómetros', symbol: 'km' }, { value: 'in', label: 'Pulgadas', symbol: 'in' }, { value: 'ft', label: 'Pies', symbol: 'ft' }, { value: 'yd', label: 'Yardas', symbol: 'yd' }, { value: 'mi', label: 'Millas', symbol: 'mi' }
     ],
     weight: [
-      { value: 'kg', label: 'Kilogramos' },
-      { value: 'g', label: 'Gramos' },
-      { value: 'lb', label: 'Libras' },
-      { value: 'oz', label: 'Onzas' }
+      { value: 'g', label: 'Gramos', symbol: 'g' }, { value: 'kg', label: 'Kilogramos', symbol: 'kg' }, { value: 'oz', label: 'Onzas', symbol: 'oz' }, { value: 'lb', label: 'Libras', symbol: 'lb' }
     ],
     temperature: [
-      { value: 'c', label: 'Celsius' },
-      { value: 'f', label: 'Fahrenheit' },
-      { value: 'k', label: 'Kelvin' }
+      { value: 'c', label: 'Celsius', symbol: '°C' }, { value: 'f', label: 'Fahrenheit', symbol: '°F' }, { value: 'k', label: 'Kelvin', symbol: 'K' }
     ]
   };
-
-  const lengthToMeters: Record<string, number> = {
-    m: 1, km: 1000, cm: 0.01, mi: 1609.344, ft: 0.3048, in: 0.0254
-  };
-  const weightToKg: Record<string, number> = {
-    kg: 1, g: 0.001, lb: 0.45359237, oz: 0.028349523125
-  };
-
-  const form = document.querySelector<HTMLFormElement>('#converter-form');
-  const typeSelect = document.querySelector<HTMLSelectElement>('#conversion-type');
-  const fromSelect = document.querySelector<HTMLSelectElement>('#from-unit');
-  const toSelect = document.querySelector<HTMLSelectElement>('#to-unit');
-  const swapButton = document.querySelector<HTMLButtonElement>('#swap-units');
-  const result = document.querySelector<HTMLElement>('#converter-result');
-  const output = document.querySelector<HTMLElement>('#converter-value');
-
-  const fillUnits = () => {
-    if (!typeSelect || !fromSelect || !toSelect) return;
-    const units = unitSets[typeSelect.value];
-    const options = units.map((unit) => `<option value="${unit.value}">${unit.label}</option>`).join('');
-    fromSelect.innerHTML = options;
-    toSelect.innerHTML = options;
-    if (toSelect.options.length > 1) toSelect.selectedIndex = 1;
-  };
-
-  const convertTemperature = (value: number, from: string, to: string) => {
-    let celsius = value;
-    if (from === 'f') celsius = (value - 32) * 5 / 9;
-    if (from === 'k') celsius = value - 273.15;
-    if (to === 'f') return (celsius * 9 / 5) + 32;
-    if (to === 'k') return celsius + 273.15;
-    return celsius;
-  };
-
-  typeSelect?.addEventListener('change', fillUnits);
-  fillUnits();
-
-  swapButton?.addEventListener('click', () => {
-    if (!fromSelect || !toSelect) return;
-    const current = fromSelect.value;
-    fromSelect.value = toSelect.value;
-    toSelect.value = current;
-  });
-
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    if (!typeSelect || !fromSelect || !toSelect) return;
-    const value = Number(new FormData(event.currentTarget as HTMLFormElement).get('value'));
-    let converted = value;
-
-    if (typeSelect.value === 'length') {
-      converted = value * lengthToMeters[fromSelect.value] / lengthToMeters[toSelect.value];
-    } else if (typeSelect.value === 'weight') {
-      converted = value * weightToKg[fromSelect.value] / weightToKg[toSelect.value];
-    } else {
-      converted = convertTemperature(value, fromSelect.value, toSelect.value);
-    }
-
-    const toLabel = toSelect.options[toSelect.selectedIndex].text;
-    if (output) output.textContent = `${Number(converted.toFixed(8))} ${toLabel}`;
-    if (result) result.hidden = false;
-  });
+  const lengthToMeters: Record<string, number> = { mm: .001, cm: .01, m: 1, km: 1000, in: .0254, ft: .3048, yd: .9144, mi: 1609.344 };
+  const weightToKg: Record<string, number> = { g: .001, kg: 1, oz: .028349523125, lb: .45359237 };
+  const form = document.querySelector<HTMLFormElement>('#converter-form'); const typeSelect = document.querySelector<HTMLSelectElement>('#conversion-type'); const fromSelect = document.querySelector<HTMLSelectElement>('#from-unit'); const toSelect = document.querySelector<HTMLSelectElement>('#to-unit'); const swapButton = document.querySelector<HTMLButtonElement>('#swap-units'); const result = document.querySelector<HTMLElement>('#converter-result'); const output = document.querySelector<HTMLElement>('#converter-value'); const equation = document.querySelector<HTMLElement>('#converter-equation');
+  const fillUnits = () => { if (!typeSelect || !fromSelect || !toSelect) return; const units = unitSets[typeSelect.value]; const options = units.map((unit) => `<option value="${unit.value}">${unit.label}</option>`).join(''); fromSelect.innerHTML = options; toSelect.innerHTML = options; if (toSelect.options.length > 1) toSelect.selectedIndex = 1; if (result) result.hidden = true; };
+  const temperature = (value: number, from: string, to: string) => { let c = value; if (from === 'f') c = (value - 32) * 5 / 9; if (from === 'k') c = value - 273.15; if (to === 'f') return c * 9 / 5 + 32; if (to === 'k') return c + 273.15; return c; };
+  const format = (value: number) => new Intl.NumberFormat('es-MX', { maximumFractionDigits: 8 }).format(Number(value.toPrecision(12)));
+  typeSelect?.addEventListener('change', fillUnits); fillUnits();
+  swapButton?.addEventListener('click', () => { if (!fromSelect || !toSelect) return; [fromSelect.value, toSelect.value] = [toSelect.value, fromSelect.value]; if (form?.checkValidity()) form.requestSubmit(); });
+  form?.addEventListener('submit', (event) => { event.preventDefault(); if (!form.reportValidity() || !typeSelect || !fromSelect || !toSelect) return; const value = Number(new FormData(form).get('value')); let converted = value; if (typeSelect.value === 'length') converted = value * lengthToMeters[fromSelect.value] / lengthToMeters[toSelect.value]; else if (typeSelect.value === 'weight') converted = value * weightToKg[fromSelect.value] / weightToKg[toSelect.value]; else converted = temperature(value, fromSelect.value, toSelect.value); const fromUnit = unitSets[typeSelect.value].find((unit) => unit.value === fromSelect.value)!; const toUnit = unitSets[typeSelect.value].find((unit) => unit.value === toSelect.value)!; if (output) output.textContent = `${format(converted)} ${toUnit.symbol}`; if (equation) equation.textContent = `${format(value)} ${fromUnit.symbol} = ${format(converted)} ${toUnit.symbol}`; if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } window.toolboxTrack?.('conversion_completed', { conversion_type: typeSelect.value, from_unit: fromSelect.value, to_unit: toSelect.value }); });
 </script>

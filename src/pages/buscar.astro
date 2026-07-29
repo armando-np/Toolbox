@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import ToolCard from '../components/ToolCard.astro';
+import Icon from '../components/Icon.astro';
+import { tools } from '../data/tools';
+---
+<BaseLayout title="Buscar herramientas" description="Busca calculadoras, generadores y convertidores disponibles en ToolboxMX." noindex={true}>
+  <PageHeader eyebrow="Directorio" title="Buscar herramientas" description="Filtra el catálogo por nombre, categoría o tema." breadcrumbs={[{ label: 'Buscar' }]} />
+  <section class="section">
+    <div class="container">
+      <div class="search-page-box">
+        <label class="search-page-input" for="catalog-search"><Icon name="search" size={21} /><span class="sr-only">Buscar</span><input id="catalog-search" type="search" placeholder="Ejemplo: hipoteca, QR, temperatura…" autocomplete="off" /></label>
+        <p id="search-count" class="search-page-count"></p>
+      </div>
+      <div id="catalog-results" class="tool-grid">
+        {tools.map((tool) => <div data-search-card data-search-text={[tool.title, tool.description, tool.category, ...tool.keywords].join(' ')}><ToolCard {...tool} /></div>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+<script>
+  const input = document.querySelector<HTMLInputElement>('#catalog-search');
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-search-card]')];
+  const count = document.querySelector<HTMLElement>('#search-count');
+  const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const update = () => {
+    const query = normalize(input?.value || '');
+    let visible = 0;
+    cards.forEach((card) => {
+      const matches = normalize(card.dataset.searchText || '').includes(query);
+      card.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    if (count) count.textContent = `${visible} ${visible === 1 ? 'resultado' : 'resultados'}`;
+  };
+  const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+  if (input) input.value = initialQuery;
+  input?.addEventListener('input', update);
+  update();
+</script>

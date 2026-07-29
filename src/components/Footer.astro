@@ -1,24 +1,41 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { SITE } from '../config/site';
+const analyticsEnabled = Boolean(import.meta.env.PUBLIC_GA_ID || import.meta.env.PUBLIC_CLARITY_ID);
+---
 <footer class="site-footer">
-  <div class="container footer-grid">
-    <div>
-      <strong>ToolboxMX</strong>
-      <p>Herramientas sencillas para resolver tareas cotidianas desde el navegador.</p>
+  <div class="container footer-main">
+    <div class="footer-brand">
+      <a class="brand" href="/" aria-label="ToolboxMX, inicio"><Logo /></a>
+      <p>Herramientas gratuitas, rápidas y claras para tareas cotidianas. Sin registro y con procesamiento local siempre que es posible.</p>
+      <a class="footer-github" href={SITE.github} target="_blank" rel="noreferrer">
+        <Icon name="github" size={18} /> Ver proyecto en GitHub
+      </a>
     </div>
-    <div>
-      <strong>Secciones</strong>
+    <div class="footer-column">
+      <strong>Herramientas</strong>
       <a href="/calculadoras/">Calculadoras</a>
       <a href="/generadores/">Generadores</a>
       <a href="/convertidores/">Convertidores</a>
+      <button type="button" data-open-search>Buscar herramienta</button>
     </div>
-    <div>
-      <strong>Proyecto</strong>
+    <div class="footer-column">
+      <strong>Contenido</strong>
       <a href="/blog/">Blog</a>
-      <a href="/acerca/">Acerca</a>
+      <a href="/acerca/">Acerca del proyecto</a>
       <a href="/contacto/">Contacto</a>
+    </div>
+    <div class="footer-column">
+      <strong>Legal</strong>
+      <a href="/privacidad/">Privacidad</a>
+      <a href="/terminos/">Términos de uso</a>
+      <a href="/sitemap-index.xml">Sitemap</a>
+      {analyticsEnabled && <button type="button" data-privacy-settings>Preferencias de privacidad</button>}
     </div>
   </div>
   <div class="container footer-bottom">
-    <span>&copy; {new Date().getFullYear()} ToolboxMX</span>
-    <span>Construido con Astro y Cloudflare Pages.</span>
+    <span>© {new Date().getFullYear()} ToolboxMX.</span>
+    <span>Construido con Astro y desplegado en Cloudflare.</span>
   </div>
 </footer>

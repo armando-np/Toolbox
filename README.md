@@ -1,167 +1,130 @@
 # ToolboxMX
 
-Proyecto Astro estatico preparado para desplegarse en Cloudflare Pages con la direccion:
+Sitio de calculadoras, generadores y convertidores construido con Astro y desplegado como archivos estáticos en Cloudflare Workers.
 
-`https://toolboxmx.pages.dev`
+## Funciones incluidas
 
-## Contenido
-
-- Inicio
-- Calculadoras
-  - IMC
-  - ISR (demo educativa)
-  - Vacaciones
-  - Hipoteca
-- Generadores
-  - QR
-  - Contrasenas
-  - UUID
-- Convertidores
-- Blog
-- Acerca
-- Contacto
-- Sitemap, robots.txt, metadatos SEO y pagina 404
-- Integracion opcional con Google Analytics 4 y Microsoft Clarity
+- Interfaz adaptable con tema claro y oscuro.
+- Buscador global con teclado (`Ctrl/⌘ + K` o `/`).
+- Catálogo centralizado en `src/data/tools.ts`.
+- Calculadoras de IMC, hipoteca, vacaciones y demo educativa de ISR.
+- Generadores de QR, contraseñas y UUID v4.
+- Convertidor de longitud, masa y temperatura.
+- Blog escalable con Content Collections de Astro.
+- Sitemap, robots.txt, RSS, canonical, Open Graph y JSON-LD.
+- Páginas de privacidad, términos, contacto y error 404.
+- Eventos opcionales para Google Analytics y Microsoft Clarity con consentimiento previo.
+- Configuración explícita para Cloudflare Workers Static Assets.
 
 ## Requisitos
 
-- Node.js 22.12 o superior
-- Git
-- Una cuenta de GitHub
-- Una cuenta de Cloudflare
+- Node.js 22.12 o posterior.
+- npm.
 
-Comprueba Node:
-
-```bash
-node -v
-npm -v
-```
-
-## 1. Ejecutar localmente
-
-Descomprime el proyecto, abre una terminal dentro de la carpeta y ejecuta:
+## Desarrollo local
 
 ```bash
 npm install
 npm run dev
 ```
 
-Astro mostrara una direccion local, normalmente:
+Astro mostrará la dirección local, normalmente `http://localhost:4321`.
 
-`http://localhost:4321`
-
-## 2. Probar el build
+## Verificación antes de publicar
 
 ```bash
 npm run build
 npm run preview
 ```
 
-El resultado de produccion se genera en `dist/`.
+## Variables de entorno
 
-## 3. Subir a GitHub
-
-Crea un repositorio vacio, por ejemplo `toolboxmx`, y ejecuta dentro de esta carpeta:
-
-```bash
-git init
-git add .
-git commit -m "Proyecto inicial ToolboxMX"
-git branch -M main
-git remote add origin https://github.com/TU-USUARIO/toolboxmx.git
-git push -u origin main
-```
-
-Sustituye `TU-USUARIO` por tu usuario real de GitHub.
-
-## 4. Desplegar en Cloudflare Pages
-
-1. En Cloudflare, abre **Workers & Pages**.
-2. Selecciona **Create application**.
-3. Abre la pestana **Pages**.
-4. Selecciona **Import an existing Git repository**.
-5. Conecta GitHub y elige el repositorio `toolboxmx`.
-6. Configura:
-   - Production branch: `main`
-   - Framework preset: `Astro`
-   - Build command: `npm run build`
-   - Build directory: `dist`
-   - Root directory: dejar vacio
-7. En **Project name**, escribe `toolboxmx`.
-8. Selecciona **Save and Deploy**.
-
-Si el nombre esta disponible, Cloudflare publicara:
-
-`https://toolboxmx.pages.dev`
-
-Cada `git push` a `main` iniciara un nuevo despliegue automaticamente.
-
-## 5. Activar Google Analytics y Clarity
-
-Copia `.env.example` como `.env` para desarrollo local:
-
-```bash
-cp .env.example .env
-```
-
-Edita los valores:
+Copia `.env.example` a `.env` para desarrollo local:
 
 ```env
-PUBLIC_GA_ID=G-XXXXXXXXXX
-PUBLIC_CLARITY_ID=xxxxxxxxxx
+PUBLIC_SITE_URL=https://toolbox.armando-nupa.workers.dev
+PUBLIC_GA_ID=
+PUBLIC_CLARITY_ID=
+PUBLIC_CONTACT_EMAIL=
 ```
 
-En Cloudflare Pages agrega las mismas variables en:
+`PUBLIC_SITE_URL` debe coincidir con la URL pública. Cuando conectes un dominio propio, cambia esa variable y vuelve a desplegar.
 
-**Settings > Environment variables**
+## Despliegue en Cloudflare Workers
 
-Haz un nuevo despliegue despues de guardarlas.
+El repositorio incluye `wrangler.jsonc` con `dist` como directorio de archivos estáticos.
 
-## Eventos preparados para analitica
+Configuración de Cloudflare Builds:
 
-Cuando configuras GA4 o Clarity, la plantilla registra:
+| Campo | Valor |
+|---|---|
+| Rama de producción | `main` |
+| Comando de compilación | `npm run build` |
+| Comando de despliegue | `npx wrangler deploy` |
 
-- `tool_submit` con el parametro `tool_name`
-- `password_copy`
-- `uuid_copy`
-- `qr_download`
+También puedes desplegar desde terminal:
 
-Puedes agregar mas eventos con el atributo `data-track="nombre_del_evento"`.
-
-## 6. Cambios importantes antes de publicar
-
-- Cambia `tu-correo@ejemplo.com` en `src/pages/contacto.astro`.
-- Revisa los textos legales y avisos.
-- La calculadora ISR es una demo; no contiene automaticamente la tarifa oficial.
-- Cambia `site` en `astro.config.mjs` si Cloudflare asigna otro subdominio.
-- Sustituye `public/og-default.svg` por una imagen social propia si lo deseas.
-
-## Estructura principal
-
-```text
-toolboxmx-astro/
-├── public/
-├── src/
-│   ├── components/
-│   ├── data/
-│   ├── layouts/
-│   ├── pages/
-│   │   ├── calculadoras/
-│   │   ├── generadores/
-│   │   ├── convertidores/
-│   │   └── blog/
-│   └── styles/
-├── astro.config.mjs
-├── package.json
-└── README.md
+```bash
+npm run deploy
 ```
 
-## Flujo normal de actualizacion
+## Actualizar el repositorio existente
+
+Sustituye el contenido del repositorio por esta versión, sin subir `node_modules` ni `dist`:
 
 ```bash
 git add .
-git commit -m "Describe el cambio"
-git push
+git commit -m "Rediseño profesional y arquitectura escalable"
+git push origin main
 ```
 
-Cloudflare Pages detectara el cambio, ejecutara `npm run build` y publicara la nueva version.
+Cloudflare debe iniciar un nuevo build automáticamente.
+
+## Arquitectura
+
+```text
+src/
+├── components/        Componentes reutilizables
+├── config/            Nombre, navegación y enlaces del sitio
+├── data/
+│   ├── tools.ts       Catálogo central de herramientas
+│   └── blog/          Artículos Markdown
+├── layouts/           Plantillas generales y de artículos
+├── pages/             Rutas y herramientas
+├── styles/            Sistema visual global
+└── content.config.ts  Esquema del blog
+```
+
+## Añadir una herramienta
+
+```bash
+npm run new:tool -- calculadoras calculadora-porcentaje
+```
+
+El script crea la página base. Luego añade la entrada correspondiente a `src/data/tools.ts`.
+
+## SEO y medición
+
+Tras publicar, comprueba:
+
+- `/robots.txt`
+- `/sitemap-index.xml`
+- `/rss.xml`
+- títulos y descripciones únicas
+- URL canonical correcta
+- eventos en GA4 y Clarity, si están configurados
+
+Eventos principales implementados:
+
+- `tool_submit`
+- `calculation_completed`
+- `generation_completed`
+- `conversion_completed`
+- `search_open`
+- `search_results_viewed`
+- `copy_completed`
+- `download_completed`
+
+## Consideraciones
+
+La página de ISR permanece marcada como demostración y tiene `noindex`. No utiliza tablas oficiales ni debe presentarse como cálculo fiscal real.

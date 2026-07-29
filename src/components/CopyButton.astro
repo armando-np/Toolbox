@@ -1,0 +1,8 @@
+---
+import Icon from './Icon.astro';
+interface Props { target: string; label?: string; }
+const { target, label = 'Copiar' } = Astro.props;
+---
+<button class="button button-secondary copy-action" type="button" data-copy-target={target}>
+  <Icon name="copy" size={18} /> <span>{label}</span>
+</button>

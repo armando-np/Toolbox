@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+---
+<BaseLayout title="Política de privacidad" description="Información sobre el tratamiento de datos, analítica y almacenamiento local en ToolboxMX.">
+  <PageHeader eyebrow="Legal" title="Política de privacidad" description="Qué datos puede procesar el sitio, para qué se utilizan y qué opciones tienes." breadcrumbs={[{ label: 'Privacidad' }]} />
+  <article class="container-narrow section prose-content">
+    <p><strong>Última actualización:</strong> 29 de julio de 2026.</p>
+    <h2>Procesamiento de las herramientas</h2>
+    <p>Las herramientas actuales realizan sus cálculos y generaciones en el navegador. Los valores introducidos no se envían a un servidor de ToolboxMX, salvo que una herramienta futura lo indique expresamente.</p>
+    <h2>Analítica opcional</h2>
+    <p>El sitio puede utilizar Google Analytics y Microsoft Clarity cuando sus identificadores estén configurados y aceptes la medición opcional. Estos servicios pueden recopilar información técnica y de uso, como páginas visitadas, dispositivo, navegador, interacciones y ubicación aproximada. Puedes cambiar tu decisión desde el enlace «Preferencias de privacidad» del pie de página.</p>
+    <h2>Almacenamiento local</h2>
+    <p>La preferencia de tema claro u oscuro se guarda en el almacenamiento local del navegador. No se utiliza para identificarte.</p>
+    <h2>Cloudflare</h2>
+    <p>El sitio se distribuye mediante Cloudflare, que procesa solicitudes de red para entregar contenido, aplicar seguridad y operar su infraestructura.</p>
+    <h2>Enlaces externos</h2>
+    <p>Los enlaces a GitHub u otros servicios están sujetos a las políticas de esos proveedores.</p>
+    <h2>Contacto</h2>
+    <p>Puedes enviar preguntas o solicitudes desde la <a href="/contacto/">página de contacto</a>.</p>
+  </article>
+</BaseLayout>

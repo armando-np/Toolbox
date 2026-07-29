@@ -1,86 +1,38 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+const faqs = [
+  { question: '¿Usa las tablas vigentes del SAT?', answer: 'No. Es una demostración educativa con parámetros manuales y no representa una tarifa oficial.' },
+  { question: '¿Puedo usarla para mi nómina o declaración?', answer: 'No. Para cálculos reales utiliza herramientas oficiales, documentación vigente o asesoría fiscal calificada.' },
+  { question: '¿Para qué sirve entonces?', answer: 'Para visualizar cómo una cuota fija, un límite inferior y una tasa marginal pueden combinarse en una tarifa progresiva.' }
+];
 ---
-<BaseLayout
-  title="Estimador de ISR"
-  description="Demo educativa de una calculadora progresiva de ISR con parametros editables."
->
-  <ToolShell
-    title="Estimador de ISR"
-    description="Explora como funciona una tarifa progresiva usando una tasa marginal editable."
-    note="Esta pagina es una demo de desarrollo y analitica. No utiliza automaticamente la tarifa oficial del SAT y no debe usarse para declaraciones, nomina o decisiones fiscales."
-  >
-    <form id="isr-form" data-tool="isr-demo">
-      <div class="form-grid">
-        <div class="field">
-          <label for="income">Ingreso mensual (MXN)</label>
-          <input id="income" name="income" type="number" min="0" step="0.01" required />
+<BaseLayout title="Estimador educativo de ISR" description="Demo educativa para comprender una tarifa progresiva de ISR con límite, cuota y tasa editables. No es una calculadora oficial." noindex={true}>
+  <ToolShell toolId="isr" title="Estimador educativo de ISR" description="Experimenta con una cuota fija, un límite inferior y una tasa marginal para entender una tarifa progresiva." note="DEMO: no contiene tablas oficiales vigentes y no debe utilizarse para nómina, declaraciones ni decisiones fiscales." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="isr-form" data-tool="isr-demo" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="income">Ingreso mensual</label><div class="input-prefix"><span>$</span><input id="income" name="income" type="number" inputmode="decimal" min="0" step="0.01" placeholder="20000" required /></div></div>
+          <div class="field"><label for="exempt">Ingreso exento</label><div class="input-prefix"><span>$</span><input id="exempt" name="exempt" type="number" inputmode="decimal" min="0" step="0.01" value="0" /></div></div>
+          <div class="field"><label for="fixed-fee">Cuota fija de ejemplo</label><div class="input-prefix"><span>$</span><input id="fixed-fee" name="fixedFee" type="number" min="0" step="0.01" value="500" /></div></div>
+          <div class="field"><label for="marginal-rate">Tasa marginal de ejemplo (%)</label><input id="marginal-rate" name="rate" type="number" min="0" max="100" step="0.01" value="10.88" /></div>
+          <div class="field field-full"><label for="lower-limit">Límite inferior del rango de ejemplo</label><div class="input-prefix"><span>$</span><input id="lower-limit" name="lowerLimit" type="number" min="0" step="0.01" value="6446.16" /></div><small>Todos los parámetros son editables y solo ilustran la mecánica.</small></div>
         </div>
-        <div class="field">
-          <label for="exempt">Ingreso exento (MXN)</label>
-          <input id="exempt" name="exempt" type="number" min="0" step="0.01" value="0" />
-        </div>
-        <div class="field">
-          <label for="fixed-fee">Cuota fija de ejemplo (MXN)</label>
-          <input id="fixed-fee" name="fixedFee" type="number" min="0" step="0.01" value="500" />
-        </div>
-        <div class="field">
-          <label for="marginal-rate">Tasa marginal de ejemplo (%)</label>
-          <input id="marginal-rate" name="rate" type="number" min="0" max="100" step="0.01" value="10.88" />
-        </div>
-        <div class="field field-full">
-          <label for="lower-limit">Limite inferior del rango de ejemplo (MXN)</label>
-          <input id="lower-limit" name="lowerLimit" type="number" min="0" step="0.01" value="6446.16" />
-          <small>Sustituye estos valores por una tarifa oficial vigente antes de convertir la demo en una herramienta fiscal real.</small>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="button" type="submit">Estimar</button>
-        <button class="button button-secondary" type="reset">Restablecer</button>
-      </div>
-    </form>
-
-    <section id="isr-result" class="result" hidden aria-live="polite">
-      <h2>Estimacion educativa</h2>
-      <p id="isr-value" class="result-value"></p>
-      <div class="result-details">
-        <span id="isr-base"></span>
-        <span id="isr-effective"></span>
-      </div>
-    </section>
+        <div class="actions"><button class="button" type="submit">Calcular ejemplo</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+      <section id="isr-result" class="result" hidden aria-live="polite"><span class="result-kicker">Estimación educativa</span><p id="isr-value" class="result-value"></p><div class="result-details"><span id="isr-base"></span><span id="isr-excess"></span><span id="isr-effective"></span></div></section>
+    </div>
+    <div slot="content">
+      <h2>Modelo simplificado</h2><p>La demostración resta el ingreso exento, calcula el excedente sobre el límite inferior y aplica una tasa marginal. Después suma la cuota fija.</p>
+      <div class="callout"><strong>Impuesto de ejemplo = cuota fija + (base − límite inferior) × tasa</strong></div>
+      <h2>Por qué no es una calculadora fiscal</h2><p>Un cálculo real puede depender del periodo, tablas oficiales, subsidios, deducciones, tipo de ingreso, retenciones y reglas particulares. Esos elementos cambian y requieren una actualización documentada.</p>
+      <FAQ items={faqs} />
+    </div>
   </ToolShell>
 </BaseLayout>
-
 <script>
-  const form = document.querySelector<HTMLFormElement>('#isr-form');
-  const result = document.querySelector<HTMLElement>('#isr-result');
-  const output = document.querySelector<HTMLElement>('#isr-value');
-  const baseOutput = document.querySelector<HTMLElement>('#isr-base');
-  const effectiveOutput = document.querySelector<HTMLElement>('#isr-effective');
-  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget as HTMLFormElement);
-    const income = Number(data.get('income'));
-    const exempt = Number(data.get('exempt'));
-    const fixedFee = Number(data.get('fixedFee'));
-    const rate = Number(data.get('rate')) / 100;
-    const lowerLimit = Number(data.get('lowerLimit'));
-
-    const taxable = Math.max(0, income - exempt);
-    const excess = Math.max(0, taxable - lowerLimit);
-    const estimated = taxable === 0 ? 0 : fixedFee + (excess * rate);
-    const effectiveRate = income > 0 ? (estimated / income) * 100 : 0;
-
-    if (output) output.textContent = mxn.format(estimated);
-    if (baseOutput) baseOutput.textContent = `Base gravable usada: ${mxn.format(taxable)}`;
-    if (effectiveOutput) effectiveOutput.textContent = `Tasa efectiva aproximada: ${effectiveRate.toFixed(2)}%`;
-    if (result) result.hidden = false;
-  });
-
-  form?.addEventListener('reset', () => {
-    if (result) result.hidden = true;
-  });
+  const form = document.querySelector<HTMLFormElement>('#isr-form'); const result = document.querySelector<HTMLElement>('#isr-result'); const output = document.querySelector<HTMLElement>('#isr-value'); const baseOutput = document.querySelector<HTMLElement>('#isr-base'); const excessOutput = document.querySelector<HTMLElement>('#isr-excess'); const effectiveOutput = document.querySelector<HTMLElement>('#isr-effective'); const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  form?.addEventListener('submit', (event) => { event.preventDefault(); if (!form.reportValidity()) return; const data = new FormData(form); const income = Number(data.get('income')); const exempt = Number(data.get('exempt')); const fixedFee = Number(data.get('fixedFee')); const rate = Number(data.get('rate')) / 100; const lowerLimit = Number(data.get('lowerLimit')); const taxable = Math.max(0, income - exempt); const excess = Math.max(0, taxable - lowerLimit); const estimated = taxable === 0 ? 0 : fixedFee + excess * rate; const effectiveRate = income > 0 ? estimated / income * 100 : 0; if (output) output.textContent = mxn.format(estimated); if (baseOutput) baseOutput.textContent = `Base usada: ${mxn.format(taxable)}`; if (excessOutput) excessOutput.textContent = `Excedente: ${mxn.format(excess)}`; if (effectiveOutput) effectiveOutput.textContent = `Tasa efectiva del ejemplo: ${effectiveRate.toFixed(2)}%`; if (result) result.hidden = false; window.toolboxTrack?.('calculation_completed', { tool_name: 'isr-demo' }); });
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; });
 </script>

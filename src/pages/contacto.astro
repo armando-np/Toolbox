@@ -1,59 +1,43 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
+import { SITE } from '../config/site';
+const contactEmail = import.meta.env.PUBLIC_CONTACT_EMAIL;
 ---
-<BaseLayout
-  title="Contacto"
-  description="Envia comentarios, errores o sugerencias para ToolboxMX."
->
-  <PageHeader
-    eyebrow="Contacto"
-    title="Comentarios y sugerencias"
-    description="Este formulario abre tu aplicacion de correo. Cambia el correo de destino antes de publicar."
-  />
-
-  <section class="container section">
-    <div class="tool-panel">
-      <form id="contact-form" data-tool="contacto">
-        <div class="form-grid">
-          <div class="field">
-            <label for="contact-name">Nombre</label>
-            <input id="contact-name" name="name" autocomplete="name" required />
-          </div>
-          <div class="field">
-            <label for="contact-email">Correo</label>
-            <input id="contact-email" name="email" type="email" autocomplete="email" required />
-          </div>
-          <div class="field field-full">
-            <label for="contact-subject">Asunto</label>
-            <input id="contact-subject" name="subject" required />
-          </div>
-          <div class="field field-full">
-            <label for="contact-message">Mensaje</label>
-            <textarea id="contact-message" name="message" required></textarea>
-          </div>
+<BaseLayout title="Contacto" description="Reporta un error, propone una herramienta o envía comentarios sobre ToolboxMX.">
+  <PageHeader eyebrow="Contacto" title="Ayuda a mejorar ToolboxMX" description="Reporta un error, propone una herramienta o comparte una observación. Incluye la URL y los pasos para reproducir el problema cuando sea posible." breadcrumbs={[{ label: 'Contacto' }]} />
+  <section class="section">
+    <div class="container split-grid">
+      <div>
+        <div class="contact-card">
+          <Icon name="github" size={25} />
+          <h2>Issue en GitHub</h2>
+          <p>La mejor opción para errores técnicos, mejoras de interfaz y propuestas que puedan discutirse públicamente.</p>
+          <a class="contact-action" href={`${SITE.github}/issues/new`} target="_blank" rel="noreferrer">Crear un issue <Icon name="external" size={17} /></a>
         </div>
-        <div class="actions">
-          <button class="button" type="submit">Preparar correo</button>
-        </div>
-      </form>
+        {contactEmail && (
+          <div class="contact-card">
+            <Icon name="mail" size={25} />
+            <h2>Correo</h2>
+            <p>Para comentarios que no deban publicarse en el repositorio.</p>
+            <a class="contact-action" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          </div>
+        )}
+      </div>
+      <div class="prose-content">
+        <h2>Información útil para un reporte</h2>
+        <ol>
+          <li>Nombre y URL de la herramienta.</li>
+          <li>Datos introducidos y resultado obtenido.</li>
+          <li>Resultado que esperabas.</li>
+          <li>Navegador y dispositivo utilizados.</li>
+          <li>Captura de pantalla, sin información sensible.</li>
+        </ol>
+        <h2>Solicitudes de nuevas herramientas</h2>
+        <p>Describe el problema que quieres resolver, quién usaría la herramienta y qué resultado debería entregar. Las ideas se priorizan por utilidad, demanda, riesgo de mantenimiento y claridad de las fuentes necesarias.</p>
+        <div class="callout">No envíes contraseñas, datos bancarios, identificaciones, expedientes médicos ni otra información sensible.</div>
+      </div>
     </div>
   </section>
 </BaseLayout>
-
-<script>
-  const form = document.querySelector<HTMLFormElement>('#contact-form');
-
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget as HTMLFormElement);
-    const name = String(data.get('name') ?? '');
-    const email = String(data.get('email') ?? '');
-    const subject = String(data.get('subject') ?? '');
-    const message = String(data.get('message') ?? '');
-    const body = `Nombre: ${name}\nCorreo: ${email}\n\n${message}`;
-
-    // Cambia este correo por el tuyo.
-    window.location.href = `mailto:tu-correo@ejemplo.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  });
-</script>

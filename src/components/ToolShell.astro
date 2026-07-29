@@ -1,19 +1,63 @@
 ---
+import Breadcrumbs from './Breadcrumbs.astro';
+import ToolCard from './ToolCard.astro';
+import Icon from './Icon.astro';
+import { getToolById, getRelatedTools } from '../data/tools';
+
 interface Props {
+  toolId: string;
   title: string;
   description: string;
   note?: string;
+  categoryHref?: string;
+  categoryLabel?: string;
 }
-const { title, description, note } = Astro.props;
+const {
+  toolId,
+  title,
+  description,
+  note,
+  categoryHref = '/calculadoras/',
+  categoryLabel = 'Calculadoras'
+} = Astro.props;
+const tool = getToolById(toolId);
+const related = getRelatedTools(toolId, 3);
 ---
-<section class="container tool-page">
-  <header class="tool-heading">
-    <p class="eyebrow">Herramienta gratuita</p>
-    <h1>{title}</h1>
-    <p class="lead">{description}</p>
-    {note && <p class="notice">{note}</p>}
-  </header>
-  <div class="tool-panel">
-    <slot />
+<section class="tool-hero">
+  <div class="container">
+    <Breadcrumbs items={[{ label: categoryLabel, href: categoryHref }, { label: title }]} />
+    <div class="tool-title-row">
+      <span class="tool-title-icon"><Icon name={tool?.icon || 'calculator'} size={30} /></span>
+      <div>
+        <p class="eyebrow">{categoryLabel} · {tool?.status || 'Disponible'}</p>
+        <h1>{title}</h1>
+        <p class="lead">{description}</p>
+      </div>
+    </div>
   </div>
 </section>
+
+<div class="container tool-layout">
+  <div class="tool-main">
+    {note && <div class="notice" role="note"><Icon name="info" size={20} /><span>{note}</span></div>}
+    <section class="tool-panel" aria-label={`Interfaz de ${title}`}>
+      <slot name="tool"><slot /></slot>
+    </section>
+    <div class="tool-content prose-content">
+      <slot name="content" />
+    </div>
+  </div>
+  <aside class="tool-sidebar">
+    <div class="sidebar-card privacy-card">
+      <Icon name="shield" size={24} />
+      <h2>Privacidad por diseño</h2>
+      <p>Los cálculos y generaciones se ejecutan en tu navegador salvo que la página indique lo contrario.</p>
+    </div>
+    <div class="sidebar-card">
+      <h2>Herramientas relacionadas</h2>
+      <div class="related-list">
+        {related.map((item) => <ToolCard {...item} compact />)}
+      </div>
+    </div>
+  </aside>
+</div>

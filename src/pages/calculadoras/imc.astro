@@ -1,72 +1,75 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolShell from '../../components/ToolShell.astro';
----
-<BaseLayout
-  title="Calculadora de IMC"
-  description="Calcula tu indice de masa corporal a partir de tu peso y estatura."
->
-  <ToolShell
-    title="Calculadora de IMC"
-    description="Introduce tu peso y estatura para obtener una estimacion de tu indice de masa corporal."
-    note="El IMC es una referencia general y no sustituye una evaluacion medica profesional."
-  >
-    <form id="imc-form" data-tool="imc">
-      <div class="form-grid">
-        <div class="field">
-          <label for="weight">Peso (kg)</label>
-          <input id="weight" name="weight" type="number" min="20" max="400" step="0.1" required />
-        </div>
-        <div class="field">
-          <label for="height">Estatura (cm)</label>
-          <input id="height" name="height" type="number" min="80" max="250" step="0.1" required />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="button" type="submit">Calcular IMC</button>
-        <button class="button button-secondary" type="reset">Limpiar</button>
-      </div>
-    </form>
+import FAQ from '../../components/FAQ.astro';
 
-    <section id="imc-result" class="result" hidden aria-live="polite">
-      <h2>Resultado</h2>
-      <p id="imc-value" class="result-value"></p>
-      <div class="result-details">
-        <span id="imc-category"></span>
-        <span>Formula: peso / estatura²</span>
-      </div>
-    </section>
+const faqs = [
+  { question: '¿El IMC es un diagnóstico?', answer: 'No. Es una referencia general basada únicamente en peso y estatura. No evalúa composición corporal, antecedentes ni estado de salud.' },
+  { question: '¿La calculadora sirve para menores de edad?', answer: 'No directamente. En niñas, niños y adolescentes la interpretación depende de edad y sexo, por lo que requiere tablas específicas.' },
+  { question: '¿Por qué un atleta puede obtener un IMC alto?', answer: 'Porque la fórmula no distingue masa muscular de grasa corporal. Una persona con mucha masa muscular puede quedar en un rango elevado sin que eso describa su composición corporal.' }
+];
+const schemas = { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de IMC', applicationCategory: 'HealthApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, description: 'Calcula el índice de masa corporal con peso y estatura.' };
+---
+<BaseLayout title="Calculadora de IMC" description="Calcula tu índice de masa corporal con peso y estatura. Obtén un resultado inmediato, rangos orientativos y explicación de la fórmula." jsonLd={schemas}>
+  <ToolShell toolId="imc" title="Calculadora de IMC" description="Introduce tu peso y estatura para obtener una estimación inmediata del índice de masa corporal." note="El IMC es una referencia general para adultos y no sustituye una evaluación médica." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="imc-form" data-tool="imc" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="weight">Peso</label>
+            <div class="input-prefix"><span>kg</span><input id="weight" name="weight" type="number" inputmode="decimal" min="20" max="400" step="0.1" placeholder="70" required /></div>
+          </div>
+          <div class="field">
+            <label for="height">Estatura</label>
+            <div class="input-prefix"><span>cm</span><input id="height" name="height" type="number" inputmode="decimal" min="80" max="250" step="0.1" placeholder="175" required /></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="button" type="submit">Calcular IMC</button>
+          <button class="button button-secondary" type="reset">Limpiar</button>
+        </div>
+      </form>
+      <section id="imc-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Tu resultado</span>
+        <p id="imc-value" class="result-value"></p>
+        <div class="result-details"><strong id="imc-category"></strong><span id="imc-range"></span></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Cómo usar la calculadora</h2>
+      <ol><li>Escribe tu peso en kilogramos.</li><li>Introduce tu estatura en centímetros.</li><li>Selecciona <strong>Calcular IMC</strong> para ver el valor y una clasificación orientativa.</li></ol>
+      <h2>Fórmula del IMC</h2>
+      <p>El índice de masa corporal se calcula dividiendo el peso en kilogramos entre la estatura en metros elevada al cuadrado:</p>
+      <div class="callout"><strong>IMC = peso (kg) ÷ estatura² (m)</strong></div>
+      <h2>Rangos orientativos para adultos</h2>
+      <div class="table-wrap"><table><thead><tr><th>IMC</th><th>Clasificación general</th></tr></thead><tbody><tr><td>Menor de 18.5</td><td>Bajo peso</td></tr><tr><td>18.5 a 24.9</td><td>Rango habitual</td></tr><tr><td>25.0 a 29.9</td><td>Sobrepeso</td></tr><tr><td>30.0 o más</td><td>Obesidad</td></tr></tbody></table></div>
+      <h2>Limitaciones</h2>
+      <p>El IMC no distingue grasa, músculo, estructura ósea ni distribución corporal. Tampoco debe interpretarse igual en menores, embarazo, personas mayores o atletas. Utiliza el resultado como punto de referencia y no como diagnóstico.</p>
+      <FAQ items={faqs} />
+    </div>
   </ToolShell>
 </BaseLayout>
-
 <script>
   const form = document.querySelector<HTMLFormElement>('#imc-form');
   const result = document.querySelector<HTMLElement>('#imc-result');
   const value = document.querySelector<HTMLElement>('#imc-value');
   const category = document.querySelector<HTMLElement>('#imc-category');
-
-  const classify = (imc: number) => {
-    if (imc < 18.5) return 'Bajo peso';
-    if (imc < 25) return 'Rango habitual';
-    if (imc < 30) return 'Sobrepeso';
-    return 'Obesidad';
-  };
-
+  const range = document.querySelector<HTMLElement>('#imc-range');
+  const classify = (imc: number) => imc < 18.5 ? ['Bajo peso', 'Menor de 18.5'] : imc < 25 ? ['Rango habitual', 'Entre 18.5 y 24.9'] : imc < 30 ? ['Sobrepeso', 'Entre 25.0 y 29.9'] : ['Obesidad', '30.0 o más'];
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget as HTMLFormElement);
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
     const weight = Number(data.get('weight'));
     const heightMeters = Number(data.get('height')) / 100;
-
-    if (!weight || !heightMeters) return;
-
     const imc = weight / (heightMeters ** 2);
+    const [label, interval] = classify(imc);
     if (value) value.textContent = imc.toFixed(1);
-    if (category) category.textContent = `Clasificacion orientativa: ${classify(imc)}`;
-    if (result) result.hidden = false;
+    if (category) category.textContent = label;
+    if (range) range.textContent = `Rango orientativo: ${interval}`;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'imc', result_category: label });
   });
-
-  form?.addEventListener('reset', () => {
-    if (result) result.hidden = true;
-  });
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; });
 </script>

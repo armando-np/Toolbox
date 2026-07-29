@@ -1,19 +1,18 @@
 ---
-interface Props {
-  title: string;
-  description: string;
-  href: string;
-  category?: string;
-  status?: string;
-}
-const { title, description, href, category, status } = Astro.props;
+import Icon from './Icon.astro';
+import type { Tool } from '../data/tools';
+interface Props extends Tool { compact?: boolean; }
+const { title, shortTitle, description, href, category, status, icon, compact = false, id } = Astro.props;
 ---
-<a class="tool-card" href={href}>
-  <div class="card-meta">
-    {category && <span>{category}</span>}
-    {status && <span class:list={['status', status === 'Demo' && 'status-demo']}>{status}</span>}
+<a class:list={['tool-card', compact && 'tool-card-compact']} href={href} data-tool-card data-tool-id={id}>
+  <div class="tool-card-top">
+    <span class:list={['tool-icon', `tool-icon-${category.toLowerCase()}`]}><Icon name={icon} size={24} /></span>
+    <span class:list={['status-badge', status === 'Demo' && 'status-demo', status === 'Beta' && 'status-beta']}>{status}</span>
   </div>
-  <h2>{title}</h2>
-  <p>{description}</p>
-  <span class="card-link">Abrir herramienta <span aria-hidden="true">→</span></span>
+  <div class="tool-card-copy">
+    <p class="tool-category">{category}</p>
+    <h2>{compact ? shortTitle : title}</h2>
+    <p>{description}</p>
+  </div>
+  <span class="tool-card-link">Abrir herramienta <Icon name="arrow-right" size={18} /></span>
 </a>
