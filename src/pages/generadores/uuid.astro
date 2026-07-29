@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+---
+<BaseLayout
+  title="Generador de UUID"
+  description="Genera identificadores UUID v4 con la API Web Crypto del navegador."
+>
+  <ToolShell
+    title="Generador de UUID v4"
+    description="Genera uno o varios identificadores unicos sin enviar informacion a un servidor."
+  >
+    <form id="uuid-form" data-tool="uuid">
+      <div class="form-grid">
+        <div class="field">
+          <label for="uuid-count">Cantidad</label>
+          <input id="uuid-count" name="count" type="number" min="1" max="100" value="5" required />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="submit">Generar UUID</button>
+        <button id="copy-uuids" data-track="uuid_copy" class="button button-secondary" type="button">Copiar todos</button>
+      </div>
+    </form>
+    <pre id="uuid-output" class="output-box" aria-live="polite">Pulsa Generar UUID.</pre>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#uuid-form');
+  const output = document.querySelector<HTMLElement>('#uuid-output');
+  const copyButton = document.querySelector<HTMLButtonElement>('#copy-uuids');
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const count = Math.min(100, Math.max(1, Number(new FormData(event.currentTarget as HTMLFormElement).get('count'))));
+    const uuids = Array.from({ length: count }, () => crypto.randomUUID());
+    if (output) output.textContent = uuids.join('\n');
+  });
+
+  copyButton?.addEventListener('click', async () => {
+    const text = output?.textContent ?? '';
+    if (!text || text === 'Pulsa Generar UUID.') return;
+    await navigator.clipboard.writeText(text);
+    copyButton.textContent = 'Copiados';
+    window.setTimeout(() => { copyButton.textContent = 'Copiar todos'; }, 1200);
+  });
+</script>

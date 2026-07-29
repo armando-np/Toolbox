@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+---
+<BaseLayout
+  title="Generador de codigo QR"
+  description="Genera un codigo QR para textos o enlaces y descargalo en formato PNG."
+>
+  <ToolShell
+    title="Generador de codigo QR"
+    description="Escribe un enlace o texto. El codigo se genera en tu navegador."
+  >
+    <form id="qr-form" data-tool="qr">
+      <div class="form-grid">
+        <div class="field field-full">
+          <label for="qr-text">Texto o URL</label>
+          <textarea id="qr-text" name="text" required placeholder="https://toolboxmx.pages.dev"></textarea>
+        </div>
+        <div class="field">
+          <label for="qr-size">Tamano</label>
+          <select id="qr-size" name="size">
+            <option value="256">256 x 256</option>
+            <option value="512" selected>512 x 512</option>
+            <option value="768">768 x 768</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qr-level">Correccion de error</label>
+          <select id="qr-level" name="level">
+            <option value="L">Baja</option>
+            <option value="M" selected>Media</option>
+            <option value="Q">Alta</option>
+            <option value="H">Maxima</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="submit">Generar QR</button>
+        <button id="download-qr" data-track="qr_download" class="button button-secondary" type="button" disabled>Descargar PNG</button>
+      </div>
+    </form>
+    <div class="qr-output">
+      <canvas id="qr-canvas" width="512" height="512" aria-label="Codigo QR generado"></canvas>
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  import QRCode from 'qrcode';
+
+  const form = document.querySelector<HTMLFormElement>('#qr-form');
+  const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas');
+  const downloadButton = document.querySelector<HTMLButtonElement>('#download-qr');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!canvas) return;
+
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const text = String(data.get('text') ?? '').trim();
+    const width = Number(data.get('size'));
+    const errorCorrectionLevel = String(data.get('level')) as 'L' | 'M' | 'Q' | 'H';
+
+    if (!text) return;
+
+    await QRCode.toCanvas(canvas, text, {
+      width,
+      margin: 2,
+      errorCorrectionLevel,
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff'
+      }
+    });
+
+    if (downloadButton) downloadButton.disabled = false;
+  });
+
+  downloadButton?.addEventListener('click', () => {
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'toolboxmx-qr.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+</script>

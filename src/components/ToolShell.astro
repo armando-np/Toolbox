@@ -1,0 +1,19 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  note?: string;
+}
+const { title, description, note } = Astro.props;
+---
+<section class="container tool-page">
+  <header class="tool-heading">
+    <p class="eyebrow">Herramienta gratuita</p>
+    <h1>{title}</h1>
+    <p class="lead">{description}</p>
+    {note && <p class="notice">{note}</p>}
+  </header>
+  <div class="tool-panel">
+    <slot />
+  </div>
+</section>

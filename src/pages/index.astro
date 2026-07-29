@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolCard from '../components/ToolCard.astro';
+import { tools } from '../data/tools';
+---
+<BaseLayout
+  title="ToolboxMX"
+  description="Calculadoras, generadores y convertidores gratuitos para resolver tareas cotidianas desde tu navegador."
+>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">Herramientas web gratuitas</p>
+        <h1>Resuelve tareas rapidas sin instalar aplicaciones.</h1>
+        <p class="lead">
+          Calculadoras, generadores y convertidores simples, rapidos y optimizados para funcionar
+          directamente en tu navegador.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#herramientas">Explorar herramientas</a>
+          <a class="button button-secondary" href="/acerca/">Conocer el proyecto</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-label="Resumen del sitio">
+        <div class="hero-stat">
+          <strong>8</strong>
+          <span>herramientas iniciales</span>
+        </div>
+        <div class="hero-stat">
+          <strong>0</strong>
+          <span>registros requeridos</span>
+        </div>
+        <div class="hero-stat">
+          <strong>100%</strong>
+          <span>compatible con moviles</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="herramientas" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Directorio</p>
+          <h2>Herramientas disponibles</h2>
+        </div>
+        <p>
+          Esta primera version permite validar SEO, navegacion, eventos, embudos y comportamiento
+          de usuarios antes de ampliar el catalogo.
+        </p>
+      </div>
+
+      <div class="tool-grid">
+        {tools.map((tool) => <ToolCard {...tool} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

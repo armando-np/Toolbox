@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+---
+<BaseLayout
+  title="Contacto"
+  description="Envia comentarios, errores o sugerencias para ToolboxMX."
+>
+  <PageHeader
+    eyebrow="Contacto"
+    title="Comentarios y sugerencias"
+    description="Este formulario abre tu aplicacion de correo. Cambia el correo de destino antes de publicar."
+  />
+
+  <section class="container section">
+    <div class="tool-panel">
+      <form id="contact-form" data-tool="contacto">
+        <div class="form-grid">
+          <div class="field">
+            <label for="contact-name">Nombre</label>
+            <input id="contact-name" name="name" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="contact-email">Correo</label>
+            <input id="contact-email" name="email" type="email" autocomplete="email" required />
+          </div>
+          <div class="field field-full">
+            <label for="contact-subject">Asunto</label>
+            <input id="contact-subject" name="subject" required />
+          </div>
+          <div class="field field-full">
+            <label for="contact-message">Mensaje</label>
+            <textarea id="contact-message" name="message" required></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="button" type="submit">Preparar correo</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#contact-form');
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const name = String(data.get('name') ?? '');
+    const email = String(data.get('email') ?? '');
+    const subject = String(data.get('subject') ?? '');
+    const message = String(data.get('message') ?? '');
+    const body = `Nombre: ${name}\nCorreo: ${email}\n\n${message}`;
+
+    // Cambia este correo por el tuyo.
+    window.location.href = `mailto:tu-correo@ejemplo.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  });
+</script>

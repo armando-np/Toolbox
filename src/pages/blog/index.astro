@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+---
+<BaseLayout
+  title="Blog"
+  description="Articulos sobre herramientas web, SEO, medicion y desarrollo con Astro."
+>
+  <PageHeader
+    eyebrow="Contenido"
+    title="Blog"
+    description="Notas practicas sobre desarrollo, SEO, analitica y mejora de herramientas digitales."
+  />
+  <section class="container section">
+    <div class="tool-grid">
+      <a class="tool-card" href="/blog/como-validar-una-herramienta-web/">
+        <div class="card-meta"><span>Analitica</span><span>5 min</span></div>
+        <h2>Como validar una herramienta web antes de crear veinte mas</h2>
+        <p>Define eventos, observa el recorrido y decide que optimizar con datos.</p>
+        <span class="card-link">Leer articulo →</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+---
+<BaseLayout
+  title="Estimador de ISR"
+  description="Demo educativa de una calculadora progresiva de ISR con parametros editables."
+>
+  <ToolShell
+    title="Estimador de ISR"
+    description="Explora como funciona una tarifa progresiva usando una tasa marginal editable."
+    note="Esta pagina es una demo de desarrollo y analitica. No utiliza automaticamente la tarifa oficial del SAT y no debe usarse para declaraciones, nomina o decisiones fiscales."
+  >
+    <form id="isr-form" data-tool="isr-demo">
+      <div class="form-grid">
+        <div class="field">
+          <label for="income">Ingreso mensual (MXN)</label>
+          <input id="income" name="income" type="number" min="0" step="0.01" required />
+        </div>
+        <div class="field">
+          <label for="exempt">Ingreso exento (MXN)</label>
+          <input id="exempt" name="exempt" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="field">
+          <label for="fixed-fee">Cuota fija de ejemplo (MXN)</label>
+          <input id="fixed-fee" name="fixedFee" type="number" min="0" step="0.01" value="500" />
+        </div>
+        <div class="field">
+          <label for="marginal-rate">Tasa marginal de ejemplo (%)</label>
+          <input id="marginal-rate" name="rate" type="number" min="0" max="100" step="0.01" value="10.88" />
+        </div>
+        <div class="field field-full">
+          <label for="lower-limit">Limite inferior del rango de ejemplo (MXN)</label>
+          <input id="lower-limit" name="lowerLimit" type="number" min="0" step="0.01" value="6446.16" />
+          <small>Sustituye estos valores por una tarifa oficial vigente antes de convertir la demo en una herramienta fiscal real.</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="submit">Estimar</button>
+        <button class="button button-secondary" type="reset">Restablecer</button>
+      </div>
+    </form>
+
+    <section id="isr-result" class="result" hidden aria-live="polite">
+      <h2>Estimacion educativa</h2>
+      <p id="isr-value" class="result-value"></p>
+      <div class="result-details">
+        <span id="isr-base"></span>
+        <span id="isr-effective"></span>
+      </div>
+    </section>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#isr-form');
+  const result = document.querySelector<HTMLElement>('#isr-result');
+  const output = document.querySelector<HTMLElement>('#isr-value');
+  const baseOutput = document.querySelector<HTMLElement>('#isr-base');
+  const effectiveOutput = document.querySelector<HTMLElement>('#isr-effective');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const income = Number(data.get('income'));
+    const exempt = Number(data.get('exempt'));
+    const fixedFee = Number(data.get('fixedFee'));
+    const rate = Number(data.get('rate')) / 100;
+    const lowerLimit = Number(data.get('lowerLimit'));
+
+    const taxable = Math.max(0, income - exempt);
+    const excess = Math.max(0, taxable - lowerLimit);
+    const estimated = taxable === 0 ? 0 : fixedFee + (excess * rate);
+    const effectiveRate = income > 0 ? (estimated / income) * 100 : 0;
+
+    if (output) output.textContent = mxn.format(estimated);
+    if (baseOutput) baseOutput.textContent = `Base gravable usada: ${mxn.format(taxable)}`;
+    if (effectiveOutput) effectiveOutput.textContent = `Tasa efectiva aproximada: ${effectiveRate.toFixed(2)}%`;
+    if (result) result.hidden = false;
+  });
+
+  form?.addEventListener('reset', () => {
+    if (result) result.hidden = true;
+  });
+</script>

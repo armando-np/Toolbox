@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+---
+<BaseLayout
+  title="Calculadora de IMC"
+  description="Calcula tu indice de masa corporal a partir de tu peso y estatura."
+>
+  <ToolShell
+    title="Calculadora de IMC"
+    description="Introduce tu peso y estatura para obtener una estimacion de tu indice de masa corporal."
+    note="El IMC es una referencia general y no sustituye una evaluacion medica profesional."
+  >
+    <form id="imc-form" data-tool="imc">
+      <div class="form-grid">
+        <div class="field">
+          <label for="weight">Peso (kg)</label>
+          <input id="weight" name="weight" type="number" min="20" max="400" step="0.1" required />
+        </div>
+        <div class="field">
+          <label for="height">Estatura (cm)</label>
+          <input id="height" name="height" type="number" min="80" max="250" step="0.1" required />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="submit">Calcular IMC</button>
+        <button class="button button-secondary" type="reset">Limpiar</button>
+      </div>
+    </form>
+
+    <section id="imc-result" class="result" hidden aria-live="polite">
+      <h2>Resultado</h2>
+      <p id="imc-value" class="result-value"></p>
+      <div class="result-details">
+        <span id="imc-category"></span>
+        <span>Formula: peso / estatura²</span>
+      </div>
+    </section>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#imc-form');
+  const result = document.querySelector<HTMLElement>('#imc-result');
+  const value = document.querySelector<HTMLElement>('#imc-value');
+  const category = document.querySelector<HTMLElement>('#imc-category');
+
+  const classify = (imc: number) => {
+    if (imc < 18.5) return 'Bajo peso';
+    if (imc < 25) return 'Rango habitual';
+    if (imc < 30) return 'Sobrepeso';
+    return 'Obesidad';
+  };
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const weight = Number(data.get('weight'));
+    const heightMeters = Number(data.get('height')) / 100;
+
+    if (!weight || !heightMeters) return;
+
+    const imc = weight / (heightMeters ** 2);
+    if (value) value.textContent = imc.toFixed(1);
+    if (category) category.textContent = `Clasificacion orientativa: ${classify(imc)}`;
+    if (result) result.hidden = false;
+  });
+
+  form?.addEventListener('reset', () => {
+    if (result) result.hidden = true;
+  });
+</script>

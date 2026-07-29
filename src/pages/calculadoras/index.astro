@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { tools } from '../../data/tools';
+const calculators = tools.filter((tool) => tool.category === 'Calculadoras');
+---
+<BaseLayout
+  title="Calculadoras"
+  description="Calculadoras gratuitas de IMC, ISR, vacaciones e hipoteca."
+>
+  <PageHeader
+    eyebrow="Categoria"
+    title="Calculadoras"
+    description="Realiza estimaciones rapidas con formulas transparentes y resultados inmediatos."
+  />
+  <section class="container section">
+    <div class="tool-grid">
+      {calculators.map((tool) => <ToolCard {...tool} />)}
+    </div>
+  </section>
+</BaseLayout>

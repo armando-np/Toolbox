@@ -1,0 +1,19 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  category?: string;
+  status?: string;
+}
+const { title, description, href, category, status } = Astro.props;
+---
+<a class="tool-card" href={href}>
+  <div class="card-meta">
+    {category && <span>{category}</span>}
+    {status && <span class:list={['status', status === 'Demo' && 'status-demo']}>{status}</span>}
+  </div>
+  <h2>{title}</h2>
+  <p>{description}</p>
+  <span class="card-link">Abrir herramienta <span aria-hidden="true">→</span></span>
+</a>

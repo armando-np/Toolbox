@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+---
+<BaseLayout
+  title="Calculadora de hipoteca"
+  description="Calcula la mensualidad aproximada, intereses y costo total de una hipoteca."
+>
+  <ToolShell
+    title="Calculadora de hipoteca"
+    description="Estima la mensualidad de un credito con pagos fijos usando capital, plazo y tasa anual."
+    note="El resultado no incluye seguros, comisiones, impuestos, CAT ni cambios de tasa. Compara siempre con la tabla de amortizacion de la institucion."
+  >
+    <form id="mortgage-form" data-tool="hipoteca">
+      <div class="form-grid">
+        <div class="field">
+          <label for="property-price">Precio de la propiedad (MXN)</label>
+          <input id="property-price" name="price" type="number" min="1" step="1000" required />
+        </div>
+        <div class="field">
+          <label for="down-payment">Enganche (MXN)</label>
+          <input id="down-payment" name="downPayment" type="number" min="0" step="1000" value="0" />
+        </div>
+        <div class="field">
+          <label for="annual-rate">Tasa anual (%)</label>
+          <input id="annual-rate" name="annualRate" type="number" min="0" max="100" step="0.01" required />
+        </div>
+        <div class="field">
+          <label for="years">Plazo (anos)</label>
+          <input id="years" name="years" type="number" min="1" max="50" step="1" value="20" required />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="submit">Calcular mensualidad</button>
+        <button class="button button-secondary" type="reset">Limpiar</button>
+      </div>
+    </form>
+
+    <section id="mortgage-result" class="result" hidden aria-live="polite">
+      <h2>Mensualidad aproximada</h2>
+      <p id="monthly-payment" class="result-value"></p>
+      <div class="result-details">
+        <span id="loan-amount"></span>
+        <span id="total-payment"></span>
+        <span id="total-interest"></span>
+      </div>
+    </section>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#mortgage-form');
+  const result = document.querySelector<HTMLElement>('#mortgage-result');
+  const monthlyOutput = document.querySelector<HTMLElement>('#monthly-payment');
+  const loanOutput = document.querySelector<HTMLElement>('#loan-amount');
+  const totalOutput = document.querySelector<HTMLElement>('#total-payment');
+  const interestOutput = document.querySelector<HTMLElement>('#total-interest');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const price = Number(data.get('price'));
+    const downPayment = Number(data.get('downPayment'));
+    const annualRate = Number(data.get('annualRate'));
+    const years = Number(data.get('years'));
+
+    const principal = Math.max(0, price - downPayment);
+    const payments = years * 12;
+    const monthlyRate = annualRate / 100 / 12;
+    const monthly = monthlyRate === 0
+      ? principal / payments
+      : principal * (monthlyRate * ((1 + monthlyRate) ** payments)) /
+        (((1 + monthlyRate) ** payments) - 1);
+    const total = monthly * payments;
+    const interest = total - principal;
+
+    if (monthlyOutput) monthlyOutput.textContent = mxn.format(monthly);
+    if (loanOutput) loanOutput.textContent = `Monto financiado: ${mxn.format(principal)}`;
+    if (totalOutput) totalOutput.textContent = `Total de pagos: ${mxn.format(total)}`;
+    if (interestOutput) interestOutput.textContent = `Intereses aproximados: ${mxn.format(interest)}`;
+    if (result) result.hidden = false;
+  });
+
+  form?.addEventListener('reset', () => {
+    if (result) result.hidden = true;
+  });
+</script>
