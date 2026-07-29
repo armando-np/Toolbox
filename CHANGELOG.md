@@ -1,5 +1,29 @@
 # Historial de cambios
 
+## 1.1.0 — 2026-07-29
+
+### Nuevas herramientas
+
+- Calculadora de porcentaje con tres modos.
+- Calculadora de descuento con promociones consecutivas.
+- Calculadora de edad exacta.
+- Calculadora de días entre fechas y días laborales.
+- Regla de tres directa e inversa.
+- Calculadora de IVA para agregar o desglosar.
+- Calculadora de aguinaldo anual y proporcional.
+- Calculadora de prima vacacional con días sugeridos por antigüedad.
+- Calculadora de interés compuesto con tabla anual.
+- Calculadora de préstamo con abonos extra y amortización.
+
+### UX, SEO y arquitectura
+
+- Nuevos controles de modo, resúmenes, tablas y fuentes verificables.
+- Contenido explicativo, ejemplos, FAQ y datos estructurados por herramienta.
+- Enlaces relacionados ordenados por afinidad temática.
+- Catálogo, buscador e inicio actualizados a 18 herramientas.
+- URL pública actualizada a `toolbox.studionp.workers.dev`.
+- Fallback de GA4 y Clarity preservado para el despliegue estático.
+
 ## 1.0.0 — 2026-07-29
 
 ### Interfaz

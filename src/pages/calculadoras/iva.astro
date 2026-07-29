@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import SourceList from '../../components/SourceList.astro';
+
+const faqs = [
+  { question: '¿Cuál es la tasa general de IVA en México?', answer: 'La tasa general es 16%. Existen actos a tasa 0%, exentos y tratamientos particulares; la calculadora no determina automáticamente cuál corresponde.' },
+  { question: '¿Cómo desgloso el IVA de un total?', answer: 'El total se divide entre 1 más la tasa expresada como decimal. Con 16%, subtotal = total ÷ 1.16.' },
+  { question: '¿Una operación a tasa 0% es lo mismo que exenta?', answer: 'No. Son tratamientos fiscales distintos. Esta herramienta únicamente realiza la operación aritmética y no clasifica la actividad.' }
+];
+
+const sources = [
+  { title: 'Concepto del impuesto al valor agregado', publisher: 'Servicio de Administración Tributaria', href: 'https://omawww.sat.gob.mx/informacion_fiscal/obligaciones_fiscales/personas_morales/no_lucrativas/Paginas/concepto_iva.aspx', note: 'Tasa general de 16%' },
+  { title: 'Ley del Impuesto al Valor Agregado', publisher: 'Servicio de Administración Tributaria', href: 'https://www.sat.gob.mx/cs/Satellite?blobcol=urldata&blobkey=id&blobtable=MungoBlobs&blobwhere=1461172990249&ssbinary=true' }
+];
+---
+<BaseLayout title="Calculadora de IVA México" description="Agrega o desglosa el IVA de una cantidad con tasa general de 16%, tasa cero o porcentaje personalizado." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de IVA México', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, dateModified: '2026-07-29' }}>
+  <ToolShell toolId="iva" title="Calculadora de IVA México" description="Agrega el impuesto a un subtotal o desglósalo de un precio que ya lo incluye." note="Herramienta aritmética informativa. No determina si una actividad está gravada, exenta o sujeta a una tasa específica." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="iva-form" data-tool="iva" novalidate>
+        <fieldset class="mode-switch">
+          <legend class="sr-only">Operación de IVA</legend>
+          <label><input type="radio" name="mode" value="add" checked /><span>Agregar IVA</span></label>
+          <label><input type="radio" name="mode" value="remove" /><span>Desglosar IVA incluido</span></label>
+        </fieldset>
+        <div class="form-grid">
+          <div class="field"><label for="iva-amount">Cantidad</label><div class="input-prefix"><span>$</span><input id="iva-amount" name="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="1,000" required /></div></div>
+          <div class="field"><label for="iva-rate-select">Tasa</label><select id="iva-rate-select" name="rateSelect"><option value="16">16% · tasa general</option><option value="0">0%</option><option value="custom">Personalizada</option></select></div>
+          <div id="iva-custom-field" class="field field-full" hidden><label for="iva-custom-rate">Tasa personalizada</label><div class="input-suffix"><input id="iva-custom-rate" name="customRate" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="16" /><span>%</span></div></div>
+        </div>
+        <div class="actions"><button class="button" type="submit">Calcular IVA</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="iva-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Resultado</span>
+        <p id="iva-main" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Subtotal sin IVA</span><strong id="iva-subtotal"></strong></div>
+          <div class="result-stat"><span>IVA</span><strong id="iva-tax"></strong></div>
+          <div class="result-stat"><span>Total con IVA</span><strong id="iva-total"></strong></div>
+          <div class="result-stat"><span>Tasa aplicada</span><strong id="iva-rate-output"></strong></div>
+        </div>
+        <div id="iva-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Agregar IVA a un subtotal</h2>
+      <p>Cuando la cantidad no incluye impuesto, el IVA se obtiene multiplicando el subtotal por la tasa. El total es la suma de ambos.</p>
+      <div class="callout"><strong>Total = subtotal × (1 + tasa)</strong></div>
+      <h2>Desglosar IVA incluido</h2>
+      <p>Para separar el impuesto de un precio final, no se debe multiplicar el total por 16%. Con una tasa de 16%, se divide entre 1.16 para recuperar el subtotal.</p>
+      <div class="callout"><strong>Subtotal = total ÷ (1 + tasa)</strong></div>
+      <h2>Alcance de la herramienta</h2>
+      <p>La calculadora no sustituye una revisión fiscal. La tasa aplicable depende de la actividad, producto, ubicación y disposiciones vigentes.</p>
+      <FAQ items={faqs} />
+      <SourceList sources={sources} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#iva-form');
+  const select = document.querySelector<HTMLSelectElement>('#iva-rate-select');
+  const customField = document.querySelector<HTMLElement>('#iva-custom-field');
+  const customInput = document.querySelector<HTMLInputElement>('#iva-custom-rate');
+  const result = document.querySelector<HTMLElement>('#iva-result');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  const number = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+  const updateRateField = () => {
+    const custom = select?.value === 'custom';
+    if (customField) customField.hidden = !custom;
+    if (customInput) customInput.disabled = !custom;
+  };
+  select?.addEventListener('change', updateRateField);
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const amount = Number(data.get('amount'));
+    const mode = String(data.get('mode'));
+    const rate = select?.value === 'custom' ? Number(customInput?.value || 0) : Number(select?.value || 0);
+    const decimal = rate / 100;
+    const subtotal = mode === 'add' ? amount : decimal === 0 ? amount : amount / (1 + decimal);
+    const tax = mode === 'add' ? amount * decimal : amount - subtotal;
+    const total = mode === 'add' ? amount + tax : amount;
+
+    set('#iva-main', mxn.format(mode === 'add' ? total : tax));
+    set('#iva-subtotal', mxn.format(subtotal));
+    set('#iva-tax', mxn.format(tax));
+    set('#iva-total', mxn.format(total));
+    set('#iva-rate-output', `${number.format(rate)}%`);
+    set('#iva-formula', mode === 'add' ? `${mxn.format(amount)} × (1 + ${number.format(rate)}%) = ${mxn.format(total)}` : `${mxn.format(amount)} ÷ (1 + ${number.format(rate)}%) = ${mxn.format(subtotal)}`);
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'iva', calculation_mode: mode, tax_rate: rate });
+  });
+  form?.addEventListener('reset', () => window.setTimeout(() => { updateRateField(); if (result) result.hidden = true; }, 0));
+  updateRateField();
+</script>

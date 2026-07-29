@@ -9,7 +9,7 @@ const escapeXml = (value: string) => value
   .replaceAll("'", '&apos;');
 
 export const GET: APIRoute = async ({ site }) => {
-  const base = site || new URL('https://toolbox.armando-nupa.workers.dev');
+  const base = site || new URL('https://toolbox.studionp.workers.dev');
   const posts = (await getCollection('blog', ({ data }) => !data.draft))
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
   const items = posts.map((post) => {

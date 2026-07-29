@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+
+const faqs = [
+  { question: '¿Cómo calculo el 20% de una cantidad?', answer: 'Multiplica la cantidad por 20 y divide entre 100. En la calculadora selecciona “Porcentaje de una cantidad”, escribe 20 y la cantidad base.' },
+  { question: '¿Cómo sé qué porcentaje representa una cantidad de otra?', answer: 'Divide la parte entre el total y multiplica por 100. El total no puede ser cero.' },
+  { question: '¿El cambio porcentual puede ser negativo?', answer: 'Sí. Un resultado negativo indica una disminución respecto al valor inicial; uno positivo indica un aumento.' }
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora de porcentaje',
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' },
+  url: Astro.url.href,
+  description: 'Calcula porcentajes, proporciones y cambios porcentuales con tres modos.'
+};
+---
+<BaseLayout title="Calculadora de porcentaje" description="Calcula qué porcentaje corresponde a una cantidad, qué porcentaje representa un valor y el cambio porcentual entre dos números." jsonLd={schema}>
+  <ToolShell toolId="porcentaje" title="Calculadora de porcentaje" description="Resuelve los tres cálculos porcentuales más comunes con resultado y procedimiento inmediato." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="percentage-form" data-tool="porcentaje" novalidate>
+        <fieldset class="mode-switch">
+          <legend class="sr-only">Tipo de cálculo</legend>
+          <label><input type="radio" name="mode" value="of" checked /><span>¿Cuánto es X% de Y?</span></label>
+          <label><input type="radio" name="mode" value="ratio" /><span>¿X es qué % de Y?</span></label>
+          <label><input type="radio" name="mode" value="change" /><span>Cambio porcentual</span></label>
+        </fieldset>
+
+        <div class="mode-panel" data-mode-panel="of">
+          <div class="form-grid">
+            <div class="field"><label for="of-percent">Porcentaje</label><div class="input-suffix"><input id="of-percent" name="ofPercent" type="number" inputmode="decimal" step="any" placeholder="20" required /><span>%</span></div></div>
+            <div class="field"><label for="of-base">Cantidad base</label><input id="of-base" name="ofBase" type="number" inputmode="decimal" step="any" placeholder="1,500" required /></div>
+          </div>
+          <div class="quick-actions" aria-label="Ejemplos rápidos">
+            <button class="quick-action" type="button" data-example="of" data-a="10" data-b="850">10% de 850</button>
+            <button class="quick-action" type="button" data-example="of" data-a="16" data-b="1000">16% de 1,000</button>
+            <button class="quick-action" type="button" data-example="of" data-a="25" data-b="2400">25% de 2,400</button>
+          </div>
+        </div>
+
+        <div class="mode-panel" data-mode-panel="ratio" hidden>
+          <div class="form-grid">
+            <div class="field"><label for="ratio-part">Parte</label><input id="ratio-part" name="ratioPart" type="number" inputmode="decimal" step="any" placeholder="45" required /></div>
+            <div class="field"><label for="ratio-total">Total</label><input id="ratio-total" name="ratioTotal" type="number" inputmode="decimal" step="any" placeholder="180" required /></div>
+          </div>
+        </div>
+
+        <div class="mode-panel" data-mode-panel="change" hidden>
+          <div class="form-grid">
+            <div class="field"><label for="change-start">Valor inicial</label><input id="change-start" name="changeStart" type="number" inputmode="decimal" step="any" placeholder="800" required /></div>
+            <div class="field"><label for="change-end">Valor final</label><input id="change-end" name="changeEnd" type="number" inputmode="decimal" step="any" placeholder="920" required /></div>
+          </div>
+        </div>
+
+        <p id="percentage-error" class="form-message" hidden role="alert"></p>
+        <div class="actions"><button class="button" type="submit">Calcular porcentaje</button><button class="button button-secondary" type="reset">Limpiar</button></div>
+      </form>
+
+      <section id="percentage-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Resultado</span>
+        <p id="percentage-value" class="result-value"></p>
+        <p id="percentage-explanation" class="result-explanation"></p>
+        <div id="percentage-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Tres maneras de trabajar con porcentajes</h2>
+      <div class="info-grid">
+        <article class="info-card"><strong>Porcentaje de una cantidad</strong><p>Útil para impuestos, propinas, comisiones o una parte de un total.</p></article>
+        <article class="info-card"><strong>Proporción porcentual</strong><p>Indica qué porcentaje representa una parte respecto a un total.</p></article>
+        <article class="info-card"><strong>Cambio porcentual</strong><p>Compara un valor final con uno inicial para medir aumento o reducción.</p></article>
+        <article class="info-card"><strong>Decimales permitidos</strong><p>Puedes introducir valores positivos, negativos y con decimales.</p></article>
+      </div>
+      <h2>Fórmulas utilizadas</h2>
+      <ul>
+        <li><strong>X% de Y:</strong> Y × X ÷ 100.</li>
+        <li><strong>X es qué % de Y:</strong> X ÷ Y × 100.</li>
+        <li><strong>Cambio porcentual:</strong> (valor final − valor inicial) ÷ |valor inicial| × 100.</li>
+      </ul>
+      <h2>Ejemplo</h2>
+      <p>Para calcular el 15% de 2,000, la operación es <strong>2,000 × 15 ÷ 100 = 300</strong>.</p>
+      <FAQ items={faqs} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#percentage-form');
+  const result = document.querySelector<HTMLElement>('#percentage-result');
+  const valueOutput = document.querySelector<HTMLElement>('#percentage-value');
+  const explanationOutput = document.querySelector<HTMLElement>('#percentage-explanation');
+  const formulaOutput = document.querySelector<HTMLElement>('#percentage-formula');
+  const errorOutput = document.querySelector<HTMLElement>('#percentage-error');
+  const numberFormat = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 6 });
+
+  const activeMode = () => form?.querySelector<HTMLInputElement>('input[name="mode"]:checked')?.value || 'of';
+  const showMode = (mode: string) => {
+    document.querySelectorAll<HTMLElement>('[data-mode-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.modePanel !== mode;
+      panel.querySelectorAll<HTMLInputElement>('input').forEach((input) => { input.disabled = panel.hidden; });
+    });
+    if (result) result.hidden = true;
+    if (errorOutput) errorOutput.hidden = true;
+  };
+
+  form?.querySelectorAll<HTMLInputElement>('input[name="mode"]').forEach((radio) => radio.addEventListener('change', () => showMode(radio.value)));
+
+  document.querySelectorAll<HTMLButtonElement>('[data-example="of"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const a = document.querySelector<HTMLInputElement>('#of-percent');
+      const b = document.querySelector<HTMLInputElement>('#of-base');
+      if (a) a.value = button.dataset.a || '';
+      if (b) b.value = button.dataset.b || '';
+      a?.focus();
+    });
+  });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const mode = activeMode();
+    let resultValue = 0;
+    let explanation = '';
+    let formula = '';
+
+    if (mode === 'of') {
+      const percent = Number(data.get('ofPercent'));
+      const base = Number(data.get('ofBase'));
+      resultValue = base * percent / 100;
+      explanation = `${numberFormat.format(percent)}% de ${numberFormat.format(base)} es ${numberFormat.format(resultValue)}.`;
+      formula = `${numberFormat.format(base)} × ${numberFormat.format(percent)} ÷ 100 = ${numberFormat.format(resultValue)}`;
+    } else if (mode === 'ratio') {
+      const part = Number(data.get('ratioPart'));
+      const total = Number(data.get('ratioTotal'));
+      if (total === 0) {
+        if (errorOutput) { errorOutput.textContent = 'El total debe ser distinto de cero.'; errorOutput.hidden = false; }
+        return;
+      }
+      resultValue = part / total * 100;
+      explanation = `${numberFormat.format(part)} representa ${numberFormat.format(resultValue)}% de ${numberFormat.format(total)}.`;
+      formula = `${numberFormat.format(part)} ÷ ${numberFormat.format(total)} × 100 = ${numberFormat.format(resultValue)}%`;
+    } else {
+      const start = Number(data.get('changeStart'));
+      const end = Number(data.get('changeEnd'));
+      if (start === 0) {
+        if (errorOutput) { errorOutput.textContent = 'El valor inicial debe ser distinto de cero para calcular un cambio porcentual.'; errorOutput.hidden = false; }
+        return;
+      }
+      resultValue = (end - start) / Math.abs(start) * 100;
+      const direction = resultValue > 0 ? 'aumento' : resultValue < 0 ? 'disminución' : 'sin cambio';
+      explanation = `El cambio de ${numberFormat.format(start)} a ${numberFormat.format(end)} es un ${direction} de ${numberFormat.format(Math.abs(resultValue))}%.`;
+      formula = `(${numberFormat.format(end)} − ${numberFormat.format(start)}) ÷ |${numberFormat.format(start)}| × 100 = ${numberFormat.format(resultValue)}%`;
+    }
+
+    if (errorOutput) errorOutput.hidden = true;
+    if (valueOutput) valueOutput.textContent = mode === 'of' ? numberFormat.format(resultValue) : `${numberFormat.format(resultValue)}%`;
+    if (explanationOutput) explanationOutput.textContent = explanation;
+    if (formulaOutput) formulaOutput.textContent = formula;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'porcentaje', calculation_mode: mode });
+  });
+
+  form?.addEventListener('reset', () => window.setTimeout(() => showMode('of'), 0));
+  showMode('of');
+</script>

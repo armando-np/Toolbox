@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+
+const faqs = [
+  { question: '¿Cuándo uso regla de tres directa?', answer: 'Cuando ambas magnitudes cambian en el mismo sentido: si una aumenta, la otra también aumenta en la misma proporción.' },
+  { question: '¿Cuándo uso regla de tres inversa?', answer: 'Cuando una magnitud aumenta y la otra disminuye, como más trabajadores para completar la misma tarea en menos tiempo.' },
+  { question: '¿Puedo usar decimales?', answer: 'Sí. La calculadora acepta números enteros, decimales y negativos, siempre que los divisores no sean cero.' }
+];
+---
+<BaseLayout title="Calculadora de regla de tres" description="Resuelve reglas de tres directas e inversas con fórmula, sustitución y resultado explicado paso a paso." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de regla de tres', applicationCategory: 'EducationalApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="regla-de-tres" title="Calculadora de regla de tres" description="Completa una proporción directa o inversa e identifica claramente el valor desconocido." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="proportion-form" data-tool="regla-de-tres" novalidate>
+        <fieldset class="mode-switch">
+          <legend class="sr-only">Tipo de regla de tres</legend>
+          <label><input type="radio" name="mode" value="direct" checked /><span>Proporción directa</span></label>
+          <label><input type="radio" name="mode" value="inverse" /><span>Proporción inversa</span></label>
+        </fieldset>
+        <div class="form-grid">
+          <div class="field"><label for="proportion-a">Valor A</label><input id="proportion-a" name="a" type="number" inputmode="decimal" step="any" placeholder="3" required /></div>
+          <div class="field"><label for="proportion-b">Valor B</label><input id="proportion-b" name="b" type="number" inputmode="decimal" step="any" placeholder="12" required /></div>
+          <div class="field"><label for="proportion-c">Valor C</label><input id="proportion-c" name="c" type="number" inputmode="decimal" step="any" placeholder="5" required /></div>
+          <div class="field"><label>Valor desconocido</label><input type="text" value="X" disabled aria-label="Valor desconocido X" /></div>
+        </div>
+        <div id="proportion-preview" class="calculation-preview">A corresponde a B; C corresponde a X.</div>
+        <p id="proportion-error" class="form-message" hidden role="alert"></p>
+        <div class="actions"><button class="button" type="submit">Resolver X</button><button class="button button-secondary" type="reset">Limpiar</button></div>
+      </form>
+
+      <section id="proportion-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Valor de X</span>
+        <p id="proportion-value" class="result-value"></p>
+        <p id="proportion-explanation" class="result-explanation"></p>
+        <div id="proportion-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Regla de tres directa</h2>
+      <p>Se utiliza cuando dos magnitudes son proporcionales en el mismo sentido. Si <strong>A corresponde a B</strong> y <strong>C corresponde a X</strong>, entonces:</p>
+      <div class="callout"><strong>X = B × C ÷ A</strong></div>
+      <h2>Regla de tres inversa</h2>
+      <p>Se utiliza cuando una magnitud aumenta mientras la otra disminuye. La relación conserva el producto:</p>
+      <div class="callout"><strong>X = A × B ÷ C</strong></div>
+      <h2>Ejemplo directo</h2>
+      <p>Si 3 cuadernos cuestan $12, entonces 5 cuadernos cuestan <strong>12 × 5 ÷ 3 = $20</strong>.</p>
+      <FAQ items={faqs} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#proportion-form');
+  const result = document.querySelector<HTMLElement>('#proportion-result');
+  const errorOutput = document.querySelector<HTMLElement>('#proportion-error');
+  const preview = document.querySelector<HTMLElement>('#proportion-preview');
+  const format = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 8 });
+  const mode = () => form?.querySelector<HTMLInputElement>('input[name="mode"]:checked')?.value || 'direct';
+  const updatePreview = () => { if (preview) preview.textContent = mode() === 'direct' ? 'Directa: A : B = C : X' : 'Inversa: A × B = C × X'; };
+  form?.querySelectorAll<HTMLInputElement>('input[name="mode"]').forEach((radio) => radio.addEventListener('change', updatePreview));
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const a = Number(data.get('a'));
+    const b = Number(data.get('b'));
+    const c = Number(data.get('c'));
+    const selected = mode();
+    const divisor = selected === 'direct' ? a : c;
+    if (divisor === 0) {
+      if (errorOutput) { errorOutput.textContent = selected === 'direct' ? 'A debe ser distinto de cero.' : 'C debe ser distinto de cero.'; errorOutput.hidden = false; }
+      return;
+    }
+    const x = selected === 'direct' ? b * c / a : a * b / c;
+    const value = document.querySelector<HTMLElement>('#proportion-value');
+    const explanation = document.querySelector<HTMLElement>('#proportion-explanation');
+    const formula = document.querySelector<HTMLElement>('#proportion-formula');
+    if (value) value.textContent = format.format(x);
+    if (explanation) explanation.textContent = selected === 'direct' ? 'Se multiplican B y C, y el producto se divide entre A.' : 'Se multiplican A y B, y el producto se divide entre C.';
+    if (formula) formula.textContent = selected === 'direct' ? `${format.format(b)} × ${format.format(c)} ÷ ${format.format(a)} = ${format.format(x)}` : `${format.format(a)} × ${format.format(b)} ÷ ${format.format(c)} = ${format.format(x)}`;
+    if (errorOutput) errorOutput.hidden = true;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'regla_de_tres', calculation_mode: selected });
+  });
+  form?.addEventListener('reset', () => window.setTimeout(() => { if (result) result.hidden = true; if (errorOutput) errorOutput.hidden = true; updatePreview(); }, 0));
+  updatePreview();
+</script>

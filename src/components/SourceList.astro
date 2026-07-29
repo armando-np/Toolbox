@@ -1,0 +1,35 @@
+---
+import Icon from './Icon.astro';
+
+interface Source {
+  title: string;
+  publisher: string;
+  href: string;
+  note?: string;
+}
+
+interface Props {
+  sources: Source[];
+  updated?: string;
+}
+
+const { sources, updated = '29 de julio de 2026' } = Astro.props;
+---
+<section class="content-section source-section" aria-labelledby="sources-title">
+  <p class="eyebrow">Transparencia</p>
+  <h2 id="sources-title">Fuentes y actualización</h2>
+  <p class="source-updated">Contenido revisado el <strong>{updated}</strong>. Verifica siempre las condiciones particulares de tu caso.</p>
+  <ul class="source-list">
+    {sources.map((source) => (
+      <li>
+        <a href={source.href} target="_blank" rel="noopener noreferrer">
+          <span>
+            <strong>{source.title}</strong>
+            <small>{source.publisher}{source.note ? ` · ${source.note}` : ''}</small>
+          </span>
+          <Icon name="external" size={18} />
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

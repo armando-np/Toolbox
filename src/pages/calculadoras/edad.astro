@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+
+const faqs = [
+  { question: '¿Cómo se calcula una edad exacta?', answer: 'Se cuentan primero los años completos, después los meses completos desde el último aniversario y finalmente los días restantes.' },
+  { question: '¿Qué pasa con una persona nacida el 29 de febrero?', answer: 'En años no bisiestos la calculadora ajusta el aniversario al último día de febrero para mantener un conteo consistente.' },
+  { question: '¿Puedo calcular la edad en una fecha pasada?', answer: 'Sí. Cambia la fecha de referencia por cualquier fecha igual o posterior al nacimiento.' }
+];
+---
+<BaseLayout title="Calculadora de edad exacta" description="Calcula tu edad exacta en años, meses y días, el total de días vividos y cuánto falta para el próximo cumpleaños." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de edad exacta', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="edad" title="Calculadora de edad exacta" description="Introduce una fecha de nacimiento y una fecha de referencia para obtener un desglose preciso." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="age-form" data-tool="edad" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="birth-date">Fecha de nacimiento</label><input id="birth-date" name="birthDate" type="date" required /></div>
+          <div class="field"><label for="reference-date">Calcular edad al</label><input id="reference-date" name="referenceDate" type="date" required /></div>
+        </div>
+        <p id="age-error" class="form-message" hidden role="alert"></p>
+        <div class="actions"><button class="button" type="submit">Calcular edad</button><button class="button button-secondary" type="reset">Limpiar</button></div>
+      </form>
+
+      <section id="age-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Edad exacta</span>
+        <p id="age-value" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Total de días</span><strong id="age-total-days"></strong></div>
+          <div class="result-stat"><span>Próximo cumpleaños</span><strong id="age-next-birthday"></strong></div>
+          <div class="result-stat"><span>Día de nacimiento</span><strong id="age-weekday"></strong></div>
+          <div class="result-stat"><span>Total aproximado de meses</span><strong id="age-total-months"></strong></div>
+        </div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Qué muestra esta calculadora</h2>
+      <p>El resultado principal utiliza años, meses y días completos de calendario. También presenta métricas complementarias útiles para trámites, aniversarios y planificación.</p>
+      <h2>Por qué no basta con restar los años</h2>
+      <p>Restar únicamente el año de nacimiento al año actual puede sumar un año antes de que llegue el cumpleaños. Por eso se comparan también el mes y el día.</p>
+      <h2>Privacidad</h2>
+      <p>Las fechas se procesan en tu navegador. No se envían a un servidor ni se guardan en ToolboxMX.</p>
+      <FAQ items={faqs} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#age-form');
+  const referenceInput = document.querySelector<HTMLInputElement>('#reference-date');
+  const birthInput = document.querySelector<HTMLInputElement>('#birth-date');
+  const result = document.querySelector<HTMLElement>('#age-result');
+  const errorOutput = document.querySelector<HTMLElement>('#age-error');
+  const dayMs = 86_400_000;
+
+  const toInputDate = (date: Date) => date.toISOString().slice(0, 10);
+  const parseUtc = (value: string) => new Date(`${value}T00:00:00Z`);
+  const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const addMonthsClamped = (date: Date, months: number) => {
+    const targetMonthIndex = date.getUTCMonth() + months;
+    const targetYear = date.getUTCFullYear() + Math.floor(targetMonthIndex / 12);
+    const targetMonth = ((targetMonthIndex % 12) + 12) % 12;
+    const day = Math.min(date.getUTCDate(), daysInMonth(targetYear, targetMonth));
+    return new Date(Date.UTC(targetYear, targetMonth, day));
+  };
+  const addYearsClamped = (date: Date, years: number) => {
+    const year = date.getUTCFullYear() + years;
+    const month = date.getUTCMonth();
+    const day = Math.min(date.getUTCDate(), daysInMonth(year, month));
+    return new Date(Date.UTC(year, month, day));
+  };
+  const diffDays = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / dayMs);
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+
+  if (referenceInput) referenceInput.value = toInputDate(new Date());
+  if (birthInput) birthInput.max = toInputDate(new Date());
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const birth = parseUtc(String(data.get('birthDate')));
+    const reference = parseUtc(String(data.get('referenceDate')));
+    if (birth > reference) {
+      if (errorOutput) { errorOutput.textContent = 'La fecha de nacimiento debe ser anterior o igual a la fecha de referencia.'; errorOutput.hidden = false; }
+      if (result) result.hidden = true;
+      return;
+    }
+
+    let years = reference.getUTCFullYear() - birth.getUTCFullYear();
+    if (addYearsClamped(birth, years) > reference) years -= 1;
+    let cursor = addYearsClamped(birth, years);
+    let months = 0;
+    while (months < 11 && addMonthsClamped(cursor, 1) <= reference) {
+      cursor = addMonthsClamped(cursor, 1);
+      months += 1;
+    }
+    const days = diffDays(cursor, reference);
+    const totalDays = diffDays(birth, reference);
+    const totalMonths = years * 12 + months;
+
+    let nextBirthday = addYearsClamped(birth, years + 1);
+    if (nextBirthday <= reference) nextBirthday = addYearsClamped(birth, years + 2);
+    const daysToBirthday = diffDays(reference, nextBirthday);
+    const dateFormat = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const weekdayFormat = new Intl.DateTimeFormat('es-MX', { weekday: 'long', timeZone: 'UTC' });
+    const integer = new Intl.NumberFormat('es-MX');
+
+    set('#age-value', `${years} años, ${months} meses y ${days} días`);
+    set('#age-total-days', integer.format(totalDays));
+    set('#age-next-birthday', daysToBirthday === 0 ? 'Es hoy' : `${dateFormat.format(nextBirthday)} · faltan ${integer.format(daysToBirthday)} días`);
+    set('#age-weekday', weekdayFormat.format(birth));
+    set('#age-total-months', integer.format(totalMonths));
+    if (errorOutput) errorOutput.hidden = true;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'edad' });
+  });
+
+  form?.addEventListener('reset', () => {
+    window.setTimeout(() => { if (referenceInput) referenceInput.value = toInputDate(new Date()); if (result) result.hidden = true; if (errorOutput) errorOutput.hidden = true; }, 0);
+  });
+</script>

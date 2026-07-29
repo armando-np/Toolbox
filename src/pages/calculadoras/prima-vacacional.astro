@@ -1,0 +1,120 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import SourceList from '../../components/SourceList.astro';
+
+const faqs = [
+  { question: '¿Cuál es la prima vacacional mínima?', answer: 'La Ley Federal del Trabajo establece una prima no menor de 25% sobre los salarios correspondientes al periodo de vacaciones.' },
+  { question: '¿Cuántos días de vacaciones corresponden?', answer: 'La herramienta sugiere los mínimos generales por antigüedad vigentes desde 2023: 12 días el primer año, aumento de 2 días hasta 20 y después 2 días por cada cinco años.' },
+  { question: '¿Puedo cambiar días y porcentaje?', answer: 'Sí. Un contrato o prestación superior puede conceder más días o un porcentaje mayor.' },
+  { question: '¿El resultado es neto?', answer: 'No. Es una estimación bruta y no calcula tratamiento fiscal ni deducciones de nómina.' }
+];
+
+const sources = [
+  { title: 'Prima vacacional', publisher: 'PROFEDET', href: 'https://www.profedet.gob.mx/micrositio/index.php/prima-vacacional', note: 'Mínimo de 25%' },
+  { title: 'Vacaciones', publisher: 'PROFEDET', href: 'https://www.profedet.gob.mx/micrositio/index.php/vacaciones', note: 'Derecho y plazo' },
+  { title: 'Ley Federal del Trabajo vigente', publisher: 'Cámara de Diputados', href: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf', note: 'Artículos 76 y 80' }
+];
+---
+<BaseLayout title="Calculadora de prima vacacional" description="Calcula vacaciones y prima vacacional en México con salario, antigüedad, días sugeridos y porcentaje configurable." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de prima vacacional', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, dateModified: '2026-07-29' }}>
+  <ToolShell toolId="prima-vacacional" title="Calculadora de prima vacacional" description="Estima el pago de vacaciones y la prima con días sugeridos por antigüedad conforme al mínimo general." note="Los días y porcentajes se pueden editar para reflejar prestaciones contractuales superiores." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="vacation-premium-form" data-tool="prima-vacacional" novalidate>
+        <fieldset class="mode-switch">
+          <legend class="sr-only">Forma de ingresar salario</legend>
+          <label><input type="radio" name="salaryType" value="monthly" checked /><span>Salario mensual</span></label>
+          <label><input type="radio" name="salaryType" value="daily" /><span>Salario diario</span></label>
+        </fieldset>
+        <div class="form-grid">
+          <div class="field"><label id="vacation-salary-label" for="vacation-salary">Salario mensual</label><div class="input-prefix"><span>$</span><input id="vacation-salary" name="salary" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="15,000" required /></div></div>
+          <div class="field"><label for="service-years">Años de antigüedad</label><div class="input-suffix"><input id="service-years" name="serviceYears" type="number" inputmode="numeric" min="1" max="60" step="1" value="1" required /><span>años</span></div></div>
+          <div class="field"><label for="vacation-days">Días de vacaciones</label><div class="input-suffix"><input id="vacation-days" name="vacationDays" type="number" inputmode="decimal" min="1" max="365" step="0.01" value="12" required readonly /><span>días</span></div><small id="vacation-days-help">Sugerencia automática según antigüedad.</small></div>
+          <div class="field"><label for="premium-rate">Prima vacacional</label><div class="input-suffix"><input id="premium-rate" name="premiumRate" type="number" inputmode="decimal" min="0" max="500" step="0.01" value="25" required /><span>%</span></div></div>
+          <label class="inline-check field-full"><input id="automatic-days" name="automaticDays" type="checkbox" checked /><span>Usar automáticamente los días mínimos generales sugeridos por antigüedad.</span></label>
+        </div>
+        <div class="actions"><button class="button" type="submit">Calcular prima</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="vacation-premium-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Vacaciones más prima</span>
+        <p id="vacation-premium-total" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Pago de vacaciones</span><strong id="vacation-base-pay"></strong></div>
+          <div class="result-stat"><span>Prima vacacional</span><strong id="vacation-premium-pay"></strong></div>
+          <div class="result-stat"><span>Salario diario usado</span><strong id="vacation-daily-pay"></strong></div>
+          <div class="result-stat"><span>Días calculados</span><strong id="vacation-days-output"></strong></div>
+        </div>
+        <div id="vacation-premium-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Días mínimos generales por antigüedad</h2>
+      <div class="table-wrap"><table><thead><tr><th>Antigüedad</th><th>Días</th></tr></thead><tbody><tr><td>1 año</td><td>12</td></tr><tr><td>2 años</td><td>14</td></tr><tr><td>3 años</td><td>16</td></tr><tr><td>4 años</td><td>18</td></tr><tr><td>5 años</td><td>20</td></tr><tr><td>6 a 10 años</td><td>22</td></tr><tr><td>11 a 15 años</td><td>24</td></tr><tr><td>16 a 20 años</td><td>26</td></tr></tbody></table></div>
+      <h2>Fórmula</h2>
+      <p>La prima se aplica sobre el salario correspondiente a los días de vacaciones.</p>
+      <div class="callout"><strong>Prima = salario diario × días de vacaciones × porcentaje</strong></div>
+      <h2>Diferencia entre vacaciones y prima</h2>
+      <p>El pago de vacaciones conserva el salario durante el descanso. La prima vacacional es una cantidad adicional sobre ese pago.</p>
+      <FAQ items={faqs} />
+      <SourceList sources={sources} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#vacation-premium-form');
+  const yearsInput = document.querySelector<HTMLInputElement>('#service-years');
+  const daysInput = document.querySelector<HTMLInputElement>('#vacation-days');
+  const automaticInput = document.querySelector<HTMLInputElement>('#automatic-days');
+  const help = document.querySelector<HTMLElement>('#vacation-days-help');
+  const salaryLabel = document.querySelector<HTMLElement>('#vacation-salary-label');
+  const salaryInput = document.querySelector<HTMLInputElement>('#vacation-salary');
+  const result = document.querySelector<HTMLElement>('#vacation-premium-result');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  const number = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+  const salaryType = () => form?.querySelector<HTMLInputElement>('input[name="salaryType"]:checked')?.value || 'monthly';
+  const legalDays = (years: number) => years <= 5 ? 10 + years * 2 : 22 + Math.floor((years - 6) / 5) * 2;
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+  const updateDays = () => {
+    const automatic = Boolean(automaticInput?.checked);
+    if (daysInput) {
+      daysInput.readOnly = automatic;
+      if (automatic) daysInput.value = String(legalDays(Number(yearsInput?.value || 1)));
+    }
+    if (help) help.textContent = automatic ? 'Sugerencia automática según antigüedad.' : 'Valor personalizado; confirma tu contrato y situación.';
+  };
+  const updateSalaryMode = () => {
+    const monthly = salaryType() === 'monthly';
+    if (salaryLabel) salaryLabel.textContent = monthly ? 'Salario mensual' : 'Salario diario';
+    if (salaryInput) salaryInput.placeholder = monthly ? '15,000' : '500';
+  };
+  yearsInput?.addEventListener('input', updateDays);
+  automaticInput?.addEventListener('change', updateDays);
+  form?.querySelectorAll<HTMLInputElement>('input[name="salaryType"]').forEach((radio) => radio.addEventListener('change', updateSalaryMode));
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const salary = Number(data.get('salary'));
+    const daily = salaryType() === 'monthly' ? salary / 30 : salary;
+    const days = Number(daysInput?.value || 0);
+    const rate = Number(data.get('premiumRate')) / 100;
+    const vacationPay = daily * days;
+    const premium = vacationPay * rate;
+    const total = vacationPay + premium;
+    set('#vacation-premium-total', mxn.format(total));
+    set('#vacation-base-pay', mxn.format(vacationPay));
+    set('#vacation-premium-pay', mxn.format(premium));
+    set('#vacation-daily-pay', mxn.format(daily));
+    set('#vacation-days-output', number.format(days));
+    set('#vacation-premium-formula', `${mxn.format(daily)} × ${number.format(days)} × ${number.format(rate * 100)}% = ${mxn.format(premium)} de prima`);
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'prima_vacacional', service_years: Number(data.get('serviceYears')), automatic_days: Boolean(automaticInput?.checked) });
+  });
+  form?.addEventListener('reset', () => window.setTimeout(() => { updateDays(); updateSalaryMode(); if (result) result.hidden = true; }, 0));
+  updateDays();
+  updateSalaryMode();
+</script>

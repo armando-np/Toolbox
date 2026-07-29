@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import SourceList from '../../components/SourceList.astro';
+
+const faqs = [
+  { question: '¿La mensualidad incluye seguros y comisiones?', answer: 'Solo incluye la comisión de apertura capturada como costo inicial. No incluye seguros, IVA sobre intereses o comisiones, CAT, gastos de cobranza ni otros cargos.' },
+  { question: '¿Qué hace el pago adicional?', answer: 'Se aplica directamente al saldo después de cubrir el interés del periodo. El modelo mantiene la mensualidad base y usa el extra para reducir el plazo.' },
+  { question: '¿La tasa anual es lo mismo que el CAT?', answer: 'No. El CAT incorpora otros costos y sirve para comparar productos. Esta calculadora utiliza únicamente la tasa anual y la comisión capturada.' },
+  { question: '¿Los resultados coincidirán con el banco?', answer: 'No necesariamente. Las instituciones pueden usar calendarios, redondeos, seguros, impuestos, comisiones y esquemas diferentes.' }
+];
+
+const sources = [
+  { title: 'Simulador de crédito personal y de nómina', publisher: 'CONDUSEF', href: 'https://phpapps.condusef.gob.mx/condusef_personalnomina/' },
+  { title: 'Simuladores financieros y recomendaciones', publisher: 'CONDUSEF', href: 'https://www.condusef.gob.mx/?p=simuladores' }
+];
+---
+<BaseLayout title="Calculadora de préstamo" description="Estima mensualidad, intereses, costo total y ahorro por pagos adicionales con una tabla de amortización completa." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de préstamo', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, dateModified: '2026-07-29' }}>
+  <ToolShell toolId="prestamo" title="Calculadora de préstamo" description="Simula un crédito de pagos fijos y observa cómo cambian plazo e intereses con abonos mensuales adicionales." note="Estimación educativa. Compara siempre CAT, seguros, comisiones, impuestos y tabla oficial del proveedor." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="loan-form" data-tool="prestamo" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="loan-amount">Monto del préstamo</label><div class="input-prefix"><span>$</span><input id="loan-amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" value="100000" required /></div></div>
+          <div class="field"><label for="loan-rate">Tasa de interés anual</label><div class="input-suffix"><input id="loan-rate" name="annualRate" type="number" inputmode="decimal" min="0" max="500" step="0.01" value="24" required /><span>%</span></div></div>
+          <div class="field"><label for="loan-term">Plazo</label><div class="input-suffix"><input id="loan-term" name="months" type="number" inputmode="numeric" min="1" max="600" step="1" value="36" required /><span>meses</span></div></div>
+          <div class="field"><label for="loan-extra">Abono adicional mensual</label><div class="input-prefix"><span>$</span><input id="loan-extra" name="extra" type="number" inputmode="decimal" min="0" step="0.01" value="0" /></div></div>
+          <div class="field field-full"><label for="loan-fee">Comisión inicial o apertura</label><div class="input-prefix"><span>$</span><input id="loan-fee" name="fee" type="number" inputmode="decimal" min="0" step="0.01" value="0" /></div></div>
+        </div>
+        <p id="loan-error" class="form-message" hidden role="alert"></p>
+        <div class="actions"><button class="button" type="submit">Calcular préstamo</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="loan-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Pago mensual programado</span>
+        <p id="loan-payment" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Intereses totales</span><strong id="loan-interest"></strong></div>
+          <div class="result-stat"><span>Costo total con comisión</span><strong id="loan-total"></strong></div>
+          <div class="result-stat"><span>Plazo real estimado</span><strong id="loan-actual-term"></strong></div>
+          <div class="result-stat"><span>Tiempo ahorrado</span><strong id="loan-saved-term"></strong></div>
+        </div>
+        <p id="loan-explanation" class="result-explanation"></p>
+      </section>
+
+      <div id="loan-table-wrap" class="table-wrap result-table" hidden>
+        <table>
+          <caption>Tabla estimada de amortización</caption>
+          <thead><tr><th>Pago</th><th>Mensualidad</th><th>Interés</th><th>Capital</th><th>Saldo</th></tr></thead>
+          <tbody id="loan-table-body"></tbody>
+        </table>
+      </div>
+      <p id="loan-table-note" class="table-note" hidden>Los importes pueden variar por redondeo respecto a la tabla de una institución financiera.</p>
+    </div>
+
+    <div slot="content">
+      <h2>Cómo se calcula un pago fijo</h2>
+      <p>En un crédito amortizable, cada pago cubre primero el interés del periodo y el resto reduce el saldo. Al inicio suele destinarse una proporción mayor a intereses.</p>
+      <div class="callout"><strong>Pago = capital × tasa mensual ÷ [1 − (1 + tasa mensual)<sup>−n</sup>]</strong></div>
+      <h2>Pagos adicionales</h2>
+      <p>El simulador supone que el abono extra se aplica a capital cada mes y conserva el pago base. En un contrato real debes confirmar si existen penalizaciones y si el pago reduce plazo o mensualidad.</p>
+      <h2>Antes de contratar</h2>
+      <ul><li>Compara CAT y pago total, no solo la tasa.</li><li>Revisa seguros, comisiones y cargos iniciales.</li><li>Solicita y conserva la tabla de amortización.</li><li>Evalúa cuánto representa el pago respecto a tus ingresos.</li></ul>
+      <FAQ items={faqs} />
+      <SourceList sources={sources} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#loan-form');
+  const result = document.querySelector<HTMLElement>('#loan-result');
+  const tableWrap = document.querySelector<HTMLElement>('#loan-table-wrap');
+  const tableBody = document.querySelector<HTMLTableSectionElement>('#loan-table-body');
+  const tableNote = document.querySelector<HTMLElement>('#loan-table-note');
+  const errorOutput = document.querySelector<HTMLElement>('#loan-error');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
+  const number = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 1 });
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const amount = Number(data.get('amount'));
+    const annualRate = Number(data.get('annualRate')) / 100;
+    const plannedMonths = Number(data.get('months'));
+    const extra = Number(data.get('extra'));
+    const fee = Number(data.get('fee'));
+    const monthlyRate = annualRate / 12;
+    const basePayment = monthlyRate === 0 ? amount / plannedMonths : amount * monthlyRate / (1 - ((1 + monthlyRate) ** -plannedMonths));
+    const scheduledPayment = basePayment + extra;
+    let balance = amount;
+    let totalInterest = 0;
+    let totalPayments = 0;
+    let month = 0;
+    const rows: string[] = [];
+
+    if (scheduledPayment <= amount * monthlyRate && monthlyRate > 0) {
+      if (errorOutput) { errorOutput.textContent = 'El pago no alcanza a cubrir el interés mensual. Revisa la tasa y el plazo.'; errorOutput.hidden = false; }
+      return;
+    }
+
+    while (balance > 0.005 && month < 1200) {
+      month += 1;
+      const interest = balance * monthlyRate;
+      const regularPayment = Math.min(balance + interest, scheduledPayment);
+      const principal = regularPayment - interest;
+      balance = Math.max(0, balance - principal);
+      totalInterest += interest;
+      totalPayments += regularPayment;
+      rows.push(`<tr><td>${month}</td><td>${mxn.format(regularPayment)}</td><td>${mxn.format(interest)}</td><td>${mxn.format(principal)}</td><td>${mxn.format(balance)}</td></tr>`);
+    }
+
+    if (month >= 1200 && balance > 0.005) {
+      if (errorOutput) { errorOutput.textContent = 'No fue posible liquidar el saldo con los parámetros indicados.'; errorOutput.hidden = false; }
+      return;
+    }
+
+    const monthsSaved = Math.max(0, plannedMonths - month);
+    const totalCost = totalPayments + fee;
+    set('#loan-payment', mxn.format(scheduledPayment));
+    set('#loan-interest', mxn.format(totalInterest));
+    set('#loan-total', mxn.format(totalCost));
+    set('#loan-actual-term', `${month} ${month === 1 ? 'mes' : 'meses'}`);
+    set('#loan-saved-term', monthsSaved ? `${monthsSaved} meses` : 'Sin reducción');
+    set('#loan-explanation', extra > 0 ? `La mensualidad incluye ${mxn.format(extra)} de abono adicional. El último pago puede ser menor.` : 'El resultado usa pagos fijos mensuales; el último pago puede variar por redondeo.');
+    if (tableBody) tableBody.innerHTML = rows.join('');
+    if (errorOutput) errorOutput.hidden = true;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    if (tableWrap) tableWrap.hidden = false;
+    if (tableNote) tableNote.hidden = false;
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'prestamo', planned_months: plannedMonths, actual_months: month, has_extra_payment: extra > 0 });
+  });
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; if (tableWrap) tableWrap.hidden = true; if (tableNote) tableNote.hidden = true; if (errorOutput) errorOutput.hidden = true; });
+</script>

@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+
+const faqs = [
+  { question: '¿La diferencia incluye la fecha inicial?', answer: 'Por defecto se calcula el tiempo transcurrido y no se cuenta el día inicial. Activa “Contar ambas fechas” para incluir inicio y fin.' },
+  { question: '¿Los días laborales excluyen feriados?', answer: 'No. La estimación excluye sábados y domingos, pero no conoce días festivos nacionales, estatales o empresariales.' },
+  { question: '¿Puedo poner primero la fecha más reciente?', answer: 'Sí. La herramienta ordena las fechas para calcular la magnitud y también indica la dirección original del intervalo.' }
+];
+---
+<BaseLayout title="Calculadora de días entre fechas" description="Calcula días naturales, días laborales, semanas y fines de semana entre dos fechas con conteo inclusivo opcional." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de días entre fechas', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="dias-entre-fechas" title="Calculadora de días entre fechas" description="Compara dos fechas y obtén el intervalo en días naturales, semanas y días laborales." note="Los días laborales excluyen sábados y domingos, pero no feriados." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="date-diff-form" data-tool="dias-entre-fechas" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="start-date">Fecha inicial</label><input id="start-date" name="startDate" type="date" required /></div>
+          <div class="field"><label for="end-date">Fecha final</label><input id="end-date" name="endDate" type="date" required /></div>
+          <label class="inline-check field-full"><input id="inclusive" name="inclusive" type="checkbox" /><span>Contar ambas fechas, incluyendo el día inicial y el día final.</span></label>
+        </div>
+        <div class="quick-actions"><button class="quick-action" type="button" data-range="week">Próximos 7 días</button><button class="quick-action" type="button" data-range="month">Próximos 30 días</button><button class="quick-action" type="button" data-range="year">Hasta fin de año</button></div>
+        <div class="actions"><button class="button" type="submit">Calcular diferencia</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="date-diff-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Diferencia principal</span>
+        <p id="date-diff-value" class="result-value"></p>
+        <p id="date-diff-direction" class="result-explanation"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Semanas completas</span><strong id="date-diff-weeks"></strong></div>
+          <div class="result-stat"><span>Días laborales</span><strong id="date-diff-business"></strong></div>
+          <div class="result-stat"><span>Días de fin de semana</span><strong id="date-diff-weekends"></strong></div>
+          <div class="result-stat"><span>Horas equivalentes</span><strong id="date-diff-hours"></strong></div>
+        </div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Días transcurridos e intervalo inclusivo</h2>
+      <p>Del 1 al 2 de enero transcurre un día. Si cuentas ambos días del calendario, el intervalo contiene dos fechas. La casilla inclusiva permite elegir la interpretación adecuada.</p>
+      <h2>Días laborales</h2>
+      <p>El conteo laboral considera de lunes a viernes. No descuenta feriados, vacaciones ni días no laborables específicos de una organización.</p>
+      <h2>Usos frecuentes</h2>
+      <ul><li>Plazos de proyectos y contratos.</li><li>Días restantes para una fecha importante.</li><li>Duración de viajes o periodos académicos.</li><li>Estimación básica de jornadas entre semana.</li></ul>
+      <FAQ items={faqs} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#date-diff-form');
+  const startInput = document.querySelector<HTMLInputElement>('#start-date');
+  const endInput = document.querySelector<HTMLInputElement>('#end-date');
+  const result = document.querySelector<HTMLElement>('#date-diff-result');
+  const dayMs = 86_400_000;
+  const inputDate = (date: Date) => date.toISOString().slice(0, 10);
+  const parse = (value: string) => new Date(`${value}T00:00:00Z`);
+  const addDays = (date: Date, days: number) => new Date(date.getTime() + days * dayMs);
+  const integer = new Intl.NumberFormat('es-MX');
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+
+  const setDefaults = () => {
+    const today = new Date();
+    if (startInput) startInput.value = inputDate(today);
+    if (endInput) endInput.value = inputDate(new Date(today.getTime() + 7 * dayMs));
+  };
+  setDefaults();
+
+  document.querySelectorAll<HTMLButtonElement>('[data-range]').forEach((button) => button.addEventListener('click', () => {
+    const today = new Date();
+    if (startInput) startInput.value = inputDate(today);
+    if (endInput) {
+      if (button.dataset.range === 'week') endInput.value = inputDate(new Date(today.getTime() + 7 * dayMs));
+      if (button.dataset.range === 'month') endInput.value = inputDate(new Date(today.getTime() + 30 * dayMs));
+      if (button.dataset.range === 'year') endInput.value = `${today.getFullYear()}-12-31`;
+    }
+  }));
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const originalStart = parse(String(data.get('startDate')));
+    const originalEnd = parse(String(data.get('endDate')));
+    const inclusive = data.get('inclusive') === 'on';
+    const reversed = originalEnd < originalStart;
+    const start = reversed ? originalEnd : originalStart;
+    const end = reversed ? originalStart : originalEnd;
+    const elapsed = Math.round((end.getTime() - start.getTime()) / dayMs);
+    const calendarDays = elapsed + (inclusive ? 1 : 0);
+    const firstCounted = inclusive ? start : addDays(start, 1);
+    let business = 0;
+    let weekends = 0;
+    for (let date = firstCounted; date <= end; date = addDays(date, 1)) {
+      const day = date.getUTCDay();
+      if (day === 0 || day === 6) weekends += 1;
+      else business += 1;
+    }
+    const weeks = Math.floor(calendarDays / 7);
+    const remaining = calendarDays % 7;
+    set('#date-diff-value', `${integer.format(calendarDays)} ${calendarDays === 1 ? 'día' : 'días'}`);
+    set('#date-diff-direction', reversed ? 'La fecha final original ocurre antes que la inicial; se muestra la distancia absoluta.' : inclusive ? 'Conteo inclusivo: se consideran ambas fechas.' : 'Tiempo transcurrido: el día inicial no se cuenta.');
+    set('#date-diff-weeks', `${integer.format(weeks)} semanas y ${remaining} días`);
+    set('#date-diff-business', integer.format(business));
+    set('#date-diff-weekends', integer.format(weekends));
+    set('#date-diff-hours', integer.format(calendarDays * 24));
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'dias_entre_fechas', inclusive, reversed });
+  });
+
+  form?.addEventListener('reset', () => window.setTimeout(() => { setDefaults(); if (result) result.hidden = true; }, 0));
+</script>

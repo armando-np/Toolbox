@@ -4,8 +4,8 @@ interface Props {
   clarityId?: string;
 }
 
-const gaId = 'G-EQTW43BF5H';
-const clarityId = 'xu6r2vbows';
+const gaId = Astro.props.gaId || 'G-EQTW43BF5H';
+const clarityId = Astro.props.clarityId || 'xu6r2vbows';
 const enabled = Boolean(gaId || clarityId);
 ---
 {enabled && (

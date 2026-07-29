@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+
+const faqs = [
+  { question: '¿Dos descuentos se suman?', answer: 'No siempre. Si se aplican uno después del otro, el segundo se calcula sobre el precio ya rebajado. Por ejemplo, 20% y después 10% equivalen a 28%, no a 30%.' },
+  { question: '¿Puedo calcular varias unidades?', answer: 'Sí. La cantidad multiplica tanto el precio final como el ahorro total.' },
+  { question: '¿La calculadora incluye IVA?', answer: 'No. El resultado se concentra en descuentos. Para agregar o desglosar impuestos utiliza la calculadora de IVA.' }
+];
+---
+<BaseLayout title="Calculadora de descuento" description="Calcula precio final, ahorro y descuento efectivo con una o dos promociones y cualquier cantidad de productos." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de descuento', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href }}>
+  <ToolShell toolId="descuento" title="Calculadora de descuento" description="Conoce cuánto pagarás, cuánto ahorras y el descuento efectivo cuando se aplican promociones consecutivas." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="discount-form" data-tool="descuento" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="original-price">Precio original por unidad</label><div class="input-prefix"><span>$</span><input id="original-price" name="price" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="1,299" required /></div></div>
+          <div class="field"><label for="discount-one">Descuento principal</label><div class="input-suffix"><input id="discount-one" name="discountOne" type="number" inputmode="decimal" min="0" max="100" step="0.01" placeholder="25" required /><span>%</span></div></div>
+          <div class="field"><label for="discount-two">Descuento adicional <small>(opcional)</small></label><div class="input-suffix"><input id="discount-two" name="discountTwo" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="0" /><span>%</span></div></div>
+          <div class="field"><label for="discount-quantity">Cantidad</label><input id="discount-quantity" name="quantity" type="number" inputmode="numeric" min="1" max="100000" step="1" value="1" required /></div>
+        </div>
+        <p class="table-note">El descuento adicional se aplica después del principal, como ocurre normalmente con un cupón sobre un precio ya rebajado.</p>
+        <div class="actions"><button class="button" type="submit">Calcular descuento</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="discount-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Total a pagar</span>
+        <p id="discount-total" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Precio final por unidad</span><strong id="discount-unit"></strong></div>
+          <div class="result-stat"><span>Ahorro total</span><strong id="discount-savings"></strong></div>
+          <div class="result-stat"><span>Descuento efectivo</span><strong id="discount-effective"></strong></div>
+          <div class="result-stat"><span>Precio original total</span><strong id="discount-original-total"></strong></div>
+        </div>
+        <div id="discount-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Cómo se calculan descuentos consecutivos</h2>
+      <p>Primero se aplica el descuento principal al precio original. Si existe una promoción adicional, se calcula sobre el precio ya descontado.</p>
+      <div class="callout"><strong>Precio final = precio × (1 − descuento 1) × (1 − descuento 2)</strong></div>
+      <h2>Ejemplo con dos promociones</h2>
+      <p>Un producto de $1,000 con 20% de descuento queda en $800. Un cupón adicional de 10% descuenta $80 sobre esos $800, por lo que el precio final es $720 y el descuento efectivo es 28%.</p>
+      <h2>Consejos para comparar ofertas</h2>
+      <ul><li>Compara el precio final, no únicamente el porcentaje anunciado.</li><li>Verifica si el cupón se aplica antes o después de impuestos y costos de envío.</li><li>Confirma límites por producto, vigencia y restricciones de la promoción.</li></ul>
+      <FAQ items={faqs} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#discount-form');
+  const result = document.querySelector<HTMLElement>('#discount-result');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  const percent = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const price = Number(data.get('price'));
+    const d1 = Number(data.get('discountOne')) / 100;
+    const d2 = Number(data.get('discountTwo')) / 100;
+    const quantity = Number(data.get('quantity'));
+    const finalUnit = price * (1 - d1) * (1 - d2);
+    const originalTotal = price * quantity;
+    const finalTotal = finalUnit * quantity;
+    const savings = originalTotal - finalTotal;
+    const effective = originalTotal > 0 ? savings / originalTotal * 100 : 0;
+
+    const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+    set('#discount-total', mxn.format(finalTotal));
+    set('#discount-unit', mxn.format(finalUnit));
+    set('#discount-savings', mxn.format(savings));
+    set('#discount-effective', `${percent.format(effective)}%`);
+    set('#discount-original-total', mxn.format(originalTotal));
+    set('#discount-formula', `${mxn.format(price)} × ${(1 - d1).toFixed(4)} × ${(1 - d2).toFixed(4)} × ${quantity} = ${mxn.format(finalTotal)}`);
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'descuento', has_additional_discount: d2 > 0, quantity });
+  });
+
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; });
+</script>

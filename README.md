@@ -7,7 +7,7 @@ Sitio de calculadoras, generadores y convertidores construido con Astro y desple
 - Interfaz adaptable con tema claro y oscuro.
 - Buscador global con teclado (`Ctrl/⌘ + K` o `/`).
 - Catálogo centralizado en `src/data/tools.ts`.
-- Calculadoras de IMC, hipoteca, vacaciones y demo educativa de ISR.
+- 14 calculadoras, incluidas porcentaje, descuento, edad, fechas, IVA, aguinaldo, prima vacacional, interés compuesto y préstamo.
 - Generadores de QR, contraseñas y UUID v4.
 - Convertidor de longitud, masa y temperatura.
 - Blog escalable con Content Collections de Astro.
@@ -42,7 +42,7 @@ npm run preview
 Copia `.env.example` a `.env` para desarrollo local:
 
 ```env
-PUBLIC_SITE_URL=https://toolbox.armando-nupa.workers.dev
+PUBLIC_SITE_URL=https://toolbox.studionp.workers.dev
 PUBLIC_GA_ID=
 PUBLIC_CLARITY_ID=
 PUBLIC_CONTACT_EMAIL=
@@ -74,7 +74,7 @@ Sustituye el contenido del repositorio por esta versión, sin subir `node_module
 
 ```bash
 git add .
-git commit -m "Rediseño profesional y arquitectura escalable"
+git commit -m "Agregar 10 calculadoras robustas y optimizar SEO"
 git push origin main
 ```
 
@@ -98,7 +98,7 @@ src/
 ## Añadir una herramienta
 
 ```bash
-npm run new:tool -- calculadoras calculadora-porcentaje
+npm run new:tool -- calculadoras nueva-calculadora
 ```
 
 El script crea la página base. Luego añade la entrada correspondiente a `src/data/tools.ts`.

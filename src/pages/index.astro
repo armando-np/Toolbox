@@ -7,7 +7,7 @@ import Icon from '../components/Icon.astro';
 import { tools, getToolsByCategory } from '../data/tools';
 import { formatDate } from '../utils/format';
 
-const featuredTools = tools.filter((tool) => tool.featured);
+const featuredTools = tools.filter((tool) => tool.featured).slice(0, 12);
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
@@ -58,9 +58,9 @@ const itemListSchema = {
         <div class="showcase-panel">
           <div class="showcase-toolbar">
             <span class="showcase-dots"><i></i><i></i><i></i></span>
-            <span class="showcase-chip">8 herramientas</span>
+            <span class="showcase-chip">{tools.length} herramientas</span>
           </div>
-          <div class="showcase-search"><Icon name="search" size={18} /> Busca IMC, QR, hipoteca…</div>
+          <div class="showcase-search"><Icon name="search" size={18} /> Busca porcentaje, edad, IVA, QR…</div>
           <div class="showcase-cards">
             {tools.filter((tool) => tool.popular).slice(0, 4).map((tool) => (
               <div class="showcase-item">

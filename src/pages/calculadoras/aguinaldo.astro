@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import SourceList from '../../components/SourceList.astro';
+
+const faqs = [
+  { question: '¿Cuántos días de aguinaldo marca la ley?', answer: 'Para relaciones regidas por la Ley Federal del Trabajo, el mínimo general es 15 días de salario por un año de servicio. Un contrato puede conceder más.' },
+  { question: '¿Tengo derecho si no trabajé todo el año?', answer: 'Sí. Corresponde una parte proporcional al tiempo trabajado durante el año.' },
+  { question: '¿El resultado ya incluye ISR?', answer: 'No. Se muestra un monto bruto estimado. La exención y retención fiscal dependen de reglas y datos adicionales.' },
+  { question: '¿Qué salario debo usar?', answer: 'Para salario fijo se usa normalmente la cuota diaria ordinaria. Los salarios variables, comisiones y casos especiales requieren un promedio conforme a la situación laboral.' }
+];
+
+const sources = [
+  { title: 'Aguinaldo', publisher: 'PROFEDET', href: 'https://www.profedet.gob.mx/micrositio/index.php/aguinaldo', note: 'Mínimo y parte proporcional' },
+  { title: 'Ley Federal del Trabajo vigente', publisher: 'Cámara de Diputados', href: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf', note: 'Artículo 87' }
+];
+---
+<BaseLayout title="Calculadora de aguinaldo" description="Estima el aguinaldo anual o proporcional en México con salario, periodo trabajado y días de prestación configurables." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de aguinaldo', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, dateModified: '2026-07-29' }}>
+  <ToolShell toolId="aguinaldo" title="Calculadora de aguinaldo" description="Calcula una estimación bruta anual o proporcional según los días trabajados dentro del mismo año." note="El resultado es informativo y no incluye ISR, salarios variables, ausencias ni reglas particulares de nómina." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="bonus-form" data-tool="aguinaldo" novalidate>
+        <fieldset class="mode-switch">
+          <legend class="sr-only">Forma de ingresar salario</legend>
+          <label><input type="radio" name="salaryType" value="monthly" checked /><span>Salario mensual</span></label>
+          <label><input type="radio" name="salaryType" value="daily" /><span>Salario diario</span></label>
+        </fieldset>
+        <div class="form-grid">
+          <div class="field"><label id="bonus-salary-label" for="bonus-salary">Salario mensual</label><div class="input-prefix"><span>$</span><input id="bonus-salary" name="salary" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="15,000" required /></div><small>Para salario mensual, se divide entre 30 para obtener la cuota diaria.</small></div>
+          <div class="field"><label for="bonus-days">Días de aguinaldo</label><div class="input-suffix"><input id="bonus-days" name="bonusDays" type="number" inputmode="decimal" min="1" max="365" step="0.01" value="15" required /><span>días</span></div></div>
+          <div class="field"><label for="bonus-start">Inicio del periodo trabajado</label><input id="bonus-start" name="startDate" type="date" required /></div>
+          <div class="field"><label for="bonus-end">Fin del periodo trabajado</label><input id="bonus-end" name="endDate" type="date" required /></div>
+        </div>
+        <p id="bonus-error" class="form-message" hidden role="alert"></p>
+        <div class="actions"><button class="button" type="submit">Calcular aguinaldo</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="bonus-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Aguinaldo bruto estimado</span>
+        <p id="bonus-total" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Salario diario usado</span><strong id="bonus-daily"></strong></div>
+          <div class="result-stat"><span>Días trabajados</span><strong id="bonus-worked"></strong></div>
+          <div class="result-stat"><span>Días proporcionales de aguinaldo</span><strong id="bonus-entitled"></strong></div>
+          <div class="result-stat"><span>Aguinaldo por año completo</span><strong id="bonus-full"></strong></div>
+        </div>
+        <div id="bonus-formula" class="calculation-preview"></div>
+      </section>
+    </div>
+
+    <div slot="content">
+      <h2>Fórmula del aguinaldo proporcional</h2>
+      <p>Primero se calcula el aguinaldo de un año completo. Después se multiplica por la proporción de días trabajados dentro del año correspondiente.</p>
+      <div class="callout"><strong>Aguinaldo proporcional = salario diario × días de aguinaldo × días trabajados ÷ días del año</strong></div>
+      <h2>Ejemplo</h2>
+      <p>Con salario diario de $500, prestación de 15 días y 183 días trabajados en un año de 365 días, la estimación es aproximadamente $3,760.27.</p>
+      <h2>Qué no calcula</h2>
+      <ul><li>ISR, exenciones ni retenciones.</li><li>Promedios de salario variable o comisiones.</li><li>Efectos de ausencias, incapacidades o condiciones contractuales.</li><li>Prestaciones superiores no capturadas en el formulario.</li></ul>
+      <FAQ items={faqs} />
+      <SourceList sources={sources} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#bonus-form');
+  const salaryLabel = document.querySelector<HTMLElement>('#bonus-salary-label');
+  const salaryInput = document.querySelector<HTMLInputElement>('#bonus-salary');
+  const startInput = document.querySelector<HTMLInputElement>('#bonus-start');
+  const endInput = document.querySelector<HTMLInputElement>('#bonus-end');
+  const result = document.querySelector<HTMLElement>('#bonus-result');
+  const errorOutput = document.querySelector<HTMLElement>('#bonus-error');
+  const dayMs = 86_400_000;
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  const number = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 4 });
+  const parse = (value: string) => new Date(`${value}T00:00:00Z`);
+  const inputDate = (date: Date) => date.toISOString().slice(0, 10);
+  const salaryType = () => form?.querySelector<HTMLInputElement>('input[name="salaryType"]:checked')?.value || 'monthly';
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+  const setDefaults = () => {
+    const year = new Date().getFullYear();
+    if (startInput) startInput.value = `${year}-01-01`;
+    if (endInput) endInput.value = `${year}-12-31`;
+  };
+  const updateSalaryMode = () => {
+    const monthly = salaryType() === 'monthly';
+    if (salaryLabel) salaryLabel.textContent = monthly ? 'Salario mensual' : 'Salario diario';
+    if (salaryInput) salaryInput.placeholder = monthly ? '15,000' : '500';
+  };
+  form?.querySelectorAll<HTMLInputElement>('input[name="salaryType"]').forEach((radio) => radio.addEventListener('change', updateSalaryMode));
+  setDefaults();
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const start = parse(String(data.get('startDate')));
+    const end = parse(String(data.get('endDate')));
+    if (end < start || start.getUTCFullYear() !== end.getUTCFullYear()) {
+      if (errorOutput) { errorOutput.textContent = 'Selecciona un periodo válido dentro del mismo año calendario.'; errorOutput.hidden = false; }
+      if (result) result.hidden = true;
+      return;
+    }
+    const salary = Number(data.get('salary'));
+    const daily = salaryType() === 'monthly' ? salary / 30 : salary;
+    const bonusDays = Number(data.get('bonusDays'));
+    const year = start.getUTCFullYear();
+    const yearDays = (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / dayMs;
+    const workedDays = Math.round((end.getTime() - start.getTime()) / dayMs) + 1;
+    const entitlementDays = bonusDays * workedDays / yearDays;
+    const full = daily * bonusDays;
+    const proportional = daily * entitlementDays;
+
+    set('#bonus-total', mxn.format(proportional));
+    set('#bonus-daily', mxn.format(daily));
+    set('#bonus-worked', `${number.format(workedDays)} de ${yearDays}`);
+    set('#bonus-entitled', number.format(entitlementDays));
+    set('#bonus-full', mxn.format(full));
+    set('#bonus-formula', `${mxn.format(daily)} × ${number.format(bonusDays)} × ${workedDays} ÷ ${yearDays} = ${mxn.format(proportional)}`);
+    if (errorOutput) errorOutput.hidden = true;
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'aguinaldo', worked_days: workedDays, salary_type: salaryType() });
+  });
+  form?.addEventListener('reset', () => window.setTimeout(() => { setDefaults(); updateSalaryMode(); if (result) result.hidden = true; if (errorOutput) errorOutput.hidden = true; }, 0));
+  updateSalaryMode();
+</script>

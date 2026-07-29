@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolShell from '../../components/ToolShell.astro';
+import FAQ from '../../components/FAQ.astro';
+import SourceList from '../../components/SourceList.astro';
+
+const faqs = [
+  { question: '¿Qué es el interés compuesto?', answer: 'Es el crecimiento que ocurre cuando los rendimientos se suman al capital y también generan rendimientos en periodos posteriores.' },
+  { question: '¿La tasa ingresada garantiza ese rendimiento?', answer: 'No. La calculadora proyecta un escenario matemático constante. Rendimientos reales, comisiones, impuestos y volatilidad pueden cambiar el resultado.' },
+  { question: '¿Cuándo se agregan las aportaciones mensuales?', answer: 'El modelo supone que se realizan al final de cada mes.' },
+  { question: '¿Para qué sirve el ajuste por inflación?', answer: 'Muestra una aproximación del poder adquisitivo futuro expresado en dinero de hoy, usando una tasa de inflación constante.' }
+];
+
+const sources = [
+  { title: 'Interés compuesto', publisher: 'CONDUSEF · Revista Proteja su Dinero', href: 'https://revista.condusef.gob.mx/inversion/2022/06/interes-compuesto/' },
+  { title: 'Simulador de ahorro e inversión', publisher: 'CONDUSEF', href: 'https://simulador.condusef.gob.mx/condusefahorro/' }
+];
+---
+<BaseLayout title="Calculadora de interés compuesto" description="Proyecta una inversión con capital inicial, aportaciones mensuales, tasa anual, plazo e inflación, incluyendo tabla anual." jsonLd={{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Calculadora de interés compuesto', applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'MXN' }, url: Astro.url.href, dateModified: '2026-07-29' }}>
+  <ToolShell toolId="interes-compuesto" title="Calculadora de interés compuesto" description="Construye un escenario de ahorro o inversión y separa aportaciones, rendimiento y valor ajustado por inflación." note="La proyección supone tasas constantes y aportaciones puntuales; no representa una promesa de rendimiento." categoryHref="/calculadoras/" categoryLabel="Calculadoras">
+    <div slot="tool">
+      <form id="compound-form" data-tool="interes-compuesto" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="compound-initial">Capital inicial</label><div class="input-prefix"><span>$</span><input id="compound-initial" name="initial" type="number" inputmode="decimal" min="0" step="0.01" value="10000" required /></div></div>
+          <div class="field"><label for="compound-monthly">Aportación mensual</label><div class="input-prefix"><span>$</span><input id="compound-monthly" name="monthly" type="number" inputmode="decimal" min="0" step="0.01" value="1000" required /></div></div>
+          <div class="field"><label for="compound-rate">Rendimiento anual estimado</label><div class="input-suffix"><input id="compound-rate" name="annualRate" type="number" inputmode="decimal" min="-99.99" max="500" step="0.01" value="8" required /><span>%</span></div></div>
+          <div class="field"><label for="compound-years">Plazo</label><div class="input-suffix"><input id="compound-years" name="years" type="number" inputmode="numeric" min="1" max="60" step="1" value="10" required /><span>años</span></div></div>
+          <div class="field field-full"><label for="compound-inflation">Inflación anual estimada <small>(opcional)</small></label><div class="input-suffix"><input id="compound-inflation" name="inflation" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="4" /><span>%</span></div><small>Se usa únicamente para estimar el valor real del saldo final.</small></div>
+        </div>
+        <div class="actions"><button class="button" type="submit">Proyectar crecimiento</button><button class="button button-secondary" type="reset">Restablecer</button></div>
+      </form>
+
+      <section id="compound-result" class="result" hidden aria-live="polite">
+        <span class="result-kicker">Saldo final proyectado</span>
+        <p id="compound-final" class="result-value"></p>
+        <div class="result-grid">
+          <div class="result-stat"><span>Total aportado</span><strong id="compound-contributed"></strong></div>
+          <div class="result-stat"><span>Rendimiento acumulado</span><strong id="compound-interest"></strong></div>
+          <div class="result-stat"><span>Valor real estimado</span><strong id="compound-real"></strong></div>
+          <div class="result-stat"><span>Multiplicador del capital</span><strong id="compound-multiple"></strong></div>
+        </div>
+      </section>
+
+      <div id="compound-table-wrap" class="table-wrap result-table" hidden>
+        <table>
+          <caption>Resumen al cierre de cada año</caption>
+          <thead><tr><th>Año</th><th>Aportado</th><th>Rendimiento</th><th>Saldo</th></tr></thead>
+          <tbody id="compound-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div slot="content">
+      <h2>Cómo se construye la proyección</h2>
+      <p>El cálculo usa capitalización mensual. Cada mes se aplica una doceava parte de la tasa anual al saldo y, al final del periodo, se agrega la aportación mensual.</p>
+      <div class="callout"><strong>Saldo siguiente = saldo actual × (1 + tasa mensual) + aportación</strong></div>
+      <h2>La importancia del plazo</h2>
+      <p>El interés compuesto suele acelerar su efecto con el tiempo porque cada rendimiento se incorpora al saldo que generará rendimientos posteriores.</p>
+      <h2>Limitaciones</h2>
+      <ul><li>No incluye comisiones, impuestos, fluctuaciones ni periodos sin aportación.</li><li>Una tasa constante es una simplificación y no representa resultados garantizados.</li><li>El valor real depende de una inflación futura que tampoco puede conocerse con certeza.</li></ul>
+      <FAQ items={faqs} />
+      <SourceList sources={sources} />
+    </div>
+  </ToolShell>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#compound-form');
+  const result = document.querySelector<HTMLElement>('#compound-result');
+  const tableWrap = document.querySelector<HTMLElement>('#compound-table-wrap');
+  const tableBody = document.querySelector<HTMLTableSectionElement>('#compound-table-body');
+  const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
+  const number = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
+  const set = (selector: string, text: string) => { const node = document.querySelector<HTMLElement>(selector); if (node) node.textContent = text; };
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    const initial = Number(data.get('initial'));
+    const monthly = Number(data.get('monthly'));
+    const annualRate = Number(data.get('annualRate')) / 100;
+    const years = Number(data.get('years'));
+    const inflation = Number(data.get('inflation')) / 100;
+    const monthlyRate = annualRate / 12;
+    const months = years * 12;
+    let balance = initial;
+    let contributed = initial;
+    const rows: string[] = [];
+
+    for (let month = 1; month <= months; month += 1) {
+      balance *= 1 + monthlyRate;
+      balance += monthly;
+      contributed += monthly;
+      if (month % 12 === 0) {
+        const year = month / 12;
+        rows.push(`<tr><td>${year}</td><td>${mxn.format(contributed)}</td><td>${mxn.format(balance - contributed)}</td><td>${mxn.format(balance)}</td></tr>`);
+      }
+    }
+
+    const interest = balance - contributed;
+    const realValue = inflation > 0 ? balance / ((1 + inflation) ** years) : balance;
+    const multiple = contributed > 0 ? balance / contributed : 0;
+    set('#compound-final', mxn.format(balance));
+    set('#compound-contributed', mxn.format(contributed));
+    set('#compound-interest', mxn.format(interest));
+    set('#compound-real', mxn.format(realValue));
+    set('#compound-multiple', `${number.format(multiple)}×`);
+    if (tableBody) tableBody.innerHTML = rows.join('');
+    if (result) { result.hidden = false; result.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    if (tableWrap) tableWrap.hidden = false;
+    window.toolboxTrack?.('calculation_completed', { tool_name: 'interes_compuesto', years, has_monthly_contribution: monthly > 0 });
+  });
+  form?.addEventListener('reset', () => { if (result) result.hidden = true; if (tableWrap) tableWrap.hidden = true; });
+</script>
